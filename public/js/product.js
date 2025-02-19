@@ -1,26 +1,44 @@
 $(document).ready(function(){
-    console.log('customers');
-    product_table();
+
+    console.log('products js');
+    products_datatable();
+
     $('#open_add_product_modal').on('click',function(){
         $('#add_product_modal').modal('show');
-
     });
    
     $('#add_product_btn').on('click',function(){
         add_product();
-
     });
-    // $('#update_customer_btn').on('click',function(){
-    //     update_customer();
-
-    // });
-
-
-
 });
 
-function product_table(){
-    console.log('product_table');
+function products_datatable()
+{
+    if ($.fn.DataTable.isDataTable('#products_datatable')){ 
+        $('#products_datatable').DataTable().destroy(); 
+    }
+
+    $('#products_datatable').DataTable({
+        "processing" : true,
+        "serverSide" : true,
+        "ajax" : {
+            "url" : base_url + '/products_datatable',
+            "type" : "POST",
+            "dataType" : "JSON",
+            "headers" : {'X-CSRF-TOKEN': $('meta[name = "csrf-token"]').attr('content')},
+        },
+        "columns" : [
+            {"data" : "id"},
+            {"data" : "product_name"},
+            {"data" : "image_url"},
+            {"data" : "category_name"},
+            {"data" : "total_quantity"},
+            {"data" : "sold_quantity"},
+            {"data" : "price"},
+            {"data" : "product_status_id"},
+            {"data" : "action"},
+        ]
+    });
 }
 
 function add_product(){

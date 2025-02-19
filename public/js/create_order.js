@@ -1,14 +1,14 @@
 $(document).ready(function(){
     console.log('create_order');
 
+    orders_datatable();
+
     $('#add_order_btn').on('click',function(){
         add_order_list();
     });
     $('#create_order_btn').on('click',function(){
         create_order();
     });
-
-   
 });
 
 function add_order_list(){
@@ -125,3 +125,29 @@ function create_order(){
     });
 }
 
+function orders_datatable(){
+    if ($.fn.DataTable.isDataTable('#orders_datatable')){ 
+        
+        $('#orders_datatable').DataTable().destroy(); 
+    }
+    $('#orders_datatable').DataTable({
+        "processing" : true,
+        "serverSide" : true,
+        "ajax" : {
+            "url" : base_url + '/orders_datatable',
+            "type" : "POST",
+            "dataType" : "JSON",
+            "headers" : {'X-CSRF-TOKEN': $('meta[name = "csrf-token"]').attr('content')},
+        },
+        "columns" : [
+            {"data" : "id"},
+            {"data" : "customer_name"},
+            {"data" : "customer_email"},
+            {"data" : "total_quantity"},
+            {"data" : "total_amount"},
+            {"data" : "order_date"},
+            {"data" : "order_status"},
+            {"data" : "action"},
+        ]
+    });
+}

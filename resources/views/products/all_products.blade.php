@@ -10,18 +10,17 @@
     </x-slot>
 
     <div class="py-12 container">
-        <table id="all_customers_table" class="table mb-0">
+        <table id="products_datatable" class="table mb-0">
             <thead class="text-gray fs-12">
                 <tr>
                     <th class="pl-0">Id</th>
                     <th data-breakpoints="md">Name</th>
-                    <th data-breakpoints="md">Description</th>
+                    <th data-breakpoints="md">Image</th>
+                    <th data-breakpoints="md">Category</th>
                     <th data-breakpoints="md">Total Quantity</th>
                     <th data-breakpoints="md">Sold Quantity</th>
+                    <th data-breakpoints="md">Price</th>
                     <th data-breakpoints="md">Status</th>
-                    <th data-breakpoints="md">Category</th>
-                    <th data-breakpoints="md">Image</th>
-                    <th data-breakpoints="md">Created By</th>
                     <th data-breakpoints="md" style="width:190px;">Action</th>
                 </tr>
             </thead>

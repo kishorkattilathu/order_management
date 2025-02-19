@@ -18,6 +18,16 @@ class OrderController extends Controller
     public function all_orders(){
         return view('order.all_orders');
     }
+
+    public function get_all_orders(){
+        $orders = Orders::with(['customer', 'orderDetails.product'])->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $orders
+        ]);
+    }
+
     public function create_orders(){
         $customers = Customers::where('account_status','active')->get();
         $products = Products::where('total_quantity','>', 0)->get();
@@ -88,5 +98,61 @@ class OrderController extends Controller
             
         }
         return response()->json($return_array);
+    }
+
+    public function orders_datatable(Request $request){
+
+        $columns = ['id','total_quantity','total_amount','order_date','order_status_id'];
+
+        $limit = $request->input('length');
+        $start = $request->input('start');
+        $order = $columns[$request->input('order.0.column')];
+        $dir = $request->input('order.0.dir');
+
+        $totalData = Orders::count();
+        $totalFiltered = $totalData;
+
+        $query = Orders::with('status','customer');
+        
+        if (!empty($request->input('search.value'))) {
+            $search = $request->input('search.value');
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'LIKE', "%{$search}%");
+            });
+
+            // Update filtered data count
+            $totalFiltered = $query->count();
+        }
+
+        // Apply ordering, limit, and offset
+        $orders = $query->orderBy($order, $dir)
+                            ->offset($start)
+                            ->limit($limit)
+                            ->get();
+
+        // Prepare data for DataTables
+        $data = [];
+        foreach ($orders as $order) 
+        {
+            $nestedData['id'] = $order->id ?? 'Not specified';
+            $nestedData['customer_name'] = $order->customer->first_name ?? 'Not specified';
+            $nestedData['customer_email'] = $order->customer->email ?? 'Not specified';
+            $nestedData['total_quantity'] = $order->total_quantity ?? 'Not specified';
+            $nestedData['total_amount'] = $order->total_amount ?? 'Not specified';
+            $nestedData['order_date'] = $order->order_date ?? 'Not specified';
+            $nestedData['order_status'] = $order->status->title ?? 'Not specified';
+
+            $nestedData['action'] =  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0" onClick = "cancel_order('.$order->id.')" title="Cancel order"> Cancel</button>';
+                        
+            $data[] = $nestedData;
+        }
+        // Return response in JSON format
+        $json_data = [
+            "draw" => intval($request->input('draw')),
+            "recordsTotal" => intval($totalData),
+            "recordsFiltered" => intval($totalFiltered),
+            "data" => $data
+        ];
+        return response()->json($json_data);
     }
 }
