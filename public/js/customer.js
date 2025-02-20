@@ -36,7 +36,7 @@ function update_customer(){
             success : function(response){
                 if (response.status) {
                     console.log(response);
-                    location.reload();
+                    customer_table();
 
                 }else{
                     alert(response.message);
@@ -203,7 +203,7 @@ function delete_customer(customerId) {
             success: function(response) {
                 if (response.status) {
                     alert('Customer deleted successfully!');
-                    location.reload();
+                    customer_table();
                 } else {
                     alert(response.message || 'Failed to delete customer.');
                 }

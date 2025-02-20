@@ -7,6 +7,7 @@ use App\Mail\OrderConfirmationMail;
 use App\Models\Customers;
 use App\Models\OrderDetails;
 use App\Models\Orders;
+use App\Models\OrderStatuses;
 use App\Models\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -16,6 +17,7 @@ class OrderController extends Controller
 {
 
     public function all_orders(){
+        
         return view('order.all_orders');
     }
 
@@ -142,7 +144,12 @@ class OrderController extends Controller
             $nestedData['order_date'] = $order->order_date ?? 'Not specified';
             $nestedData['order_status'] = $order->status->title ?? 'Not specified';
 
-            $nestedData['action'] =  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0" onClick = "cancel_order('.$order->id.')" title="Cancel order"> Cancel</button>';
+            if($order->order_status_id != 6 ){
+                $nestedData['action'] =  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0" onClick = "cancel_order('.$order->id.')" title="Cancel order"> Cancel</button>';
+            }else{
+                $nestedData['action'] =  '<button class="btn btn-primary btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0"  title="Cancel order"> Cant cancel</button>';
+            }
+           
                         
             $data[] = $nestedData;
         }
@@ -154,5 +161,60 @@ class OrderController extends Controller
             "data" => $data
         ];
         return response()->json($json_data);
+    }
+
+    public function cancel_order(Request $request){
+        $return_array = ['status'=>false, 'message'=>''];
+        $order_id = $request->input('order_id');
+
+        if($order_id){
+            $order_data = Orders::find($order_id);
+            $order_status_id = $order_data->order_status_id;
+            if($order_status_id != 5){
+                $order_data->order_status_id = 6;
+                $updated_order_status = $order_data->save();
+                // $updated_order_status = 1;
+                if($updated_order_status){
+
+                    $order_details = OrderDetails::where('order_id',$order_id)->get();
+                    // dd($order_details);
+                    if ($order_details->isNotEmpty()) {
+                        foreach ($order_details as $order_detail) {
+                            // echo "<pre>";
+                            // print_r($order_detail->toArray()); // Convert Eloquent model to array for clean output
+                            // echo "</pre>";
+
+                            $product_id = $order_detail->product_id;
+                            $used_quantity = $order_detail->product_quantity;
+
+                            $product_details = Products::find($product_id);
+
+
+                            $product_details->total_quantity += $used_quantity;
+                            $product_details->sold_quantity = max(0, $product_details->sold_quantity - $used_quantity);
+
+                            $data_reversed = $product_details->save();
+                            if($data_reversed){
+                                $return_array['message'] = 'Product Cancelled Successfully';
+                                $return_array['status'] = true;
+
+                            }else{
+                                $return_array['message'] = 'Failed to update';
+                            }
+                        }
+                    }
+                }else{
+                    $return_array['message'] = 'Failed try again';
+
+                }
+            }else{
+                $return_array['message'] = 'product delivered and cant cancel';
+                
+            }
+        }else{
+            $return_array['message'] = 'Order not found';
+        }
+        return response()->json($return_array);
+
     }
 }

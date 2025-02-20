@@ -151,3 +151,44 @@ function orders_datatable(){
         ]
     });
 }
+
+function cancel_order(order_id){
+    // console.log('cancel_order',order_id);
+    if (confirm('Are you sure you want to cancel this order?')) {
+        $.ajax({
+            url: base_url +'/cancel_order',
+            data : {'order_id':order_id},
+            type : 'POST',
+            dataType : 'JSON',
+            headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+            success : function(response){
+                if (response.status) {
+                    orders_datatable();
+    
+                }else{
+                    alert(response.message);
+                }
+            },
+            error : function(xhr,status,error){
+                    console.log('xhr',xhr);
+                    console.log('status',status);
+                    console.log('error',error);
+                    var response_error = xhr.responseJSON.errors;
+                    display_php_error(response_error);
+            }
+        });
+    }
+
+}
+
+function display_php_error(response_message){
+    $.each(response_message,function(input_id,response_message){
+        $('#error-'+input_id ).html(response_message);
+    });
+}
+
+function remove_php_error(input_array){
+    $.each(input_array,function(key,input_id){
+        $('#error-'+input_id ).html('');
+    });
+}
