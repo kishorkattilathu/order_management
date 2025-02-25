@@ -16,6 +16,7 @@ function add_order_list(){
 
 
    var product_id = $('#product_id').val();
+//    var customer_id = $('#customer_id').val();
    var product_text = $('#product_id option:selected').text();
 
 
@@ -76,8 +77,7 @@ function add_order_list(){
     });
     
 
-    // $('#customer_id').prop('selectedIndex', 0);
-    // $('#product_id').prop('selectedIndex', 0);
+    
 }
 
 $(document).on('click', '.remove-product', function() {

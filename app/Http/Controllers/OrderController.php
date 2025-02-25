@@ -32,7 +32,8 @@ class OrderController extends Controller
 
     public function create_orders(){
         $customers = Customers::where('account_status','active')->get();
-        $products = Products::where('total_quantity','>', 0)->get();
+        // $products = Products::where('total_quantity','>', 0)->get();
+        $products = Products::where([['total_quantity','>', 0],['product_status_id',1]])->get();
         return view('order.create_orders',compact('customers','products'));
     }
 
@@ -109,7 +110,7 @@ class OrderController extends Controller
         $limit = $request->input('length');
         $start = $request->input('start');
         $order = $columns[$request->input('order.0.column')];
-        $dir = $request->input('order.0.dir');
+        $dir = $request->input('order.0.dir','desc');
 
         $totalData = Orders::count();
         $totalFiltered = $totalData;
@@ -180,9 +181,7 @@ class OrderController extends Controller
                     // dd($order_details);
                     if ($order_details->isNotEmpty()) {
                         foreach ($order_details as $order_detail) {
-                            // echo "<pre>";
-                            // print_r($order_detail->toArray()); // Convert Eloquent model to array for clean output
-                            // echo "</pre>";
+                            
 
                             $product_id = $order_detail->product_id;
                             $used_quantity = $order_detail->product_quantity;
