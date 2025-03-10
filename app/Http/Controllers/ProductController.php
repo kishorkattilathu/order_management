@@ -55,8 +55,8 @@ class ProductController extends Controller
         $rules = [
             'product_name' => 'required|string|max:255',
             'description' => 'required|string|max:255',
-            'total_quantity' => 'required|integer',
-            'price' => 'required|numeric',
+            'total_quantity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:1',
             'product_status_id' => 'required|integer',
             'category_id' => 'required|integer',
             'image_url' => 'nullable|mimes:jpg,png,jpeg|max:2048', 
@@ -99,8 +99,8 @@ class ProductController extends Controller
                     $image->move('images/categories',$file_name);
                     $product_data->image_url = $file_name;
                 }
-            
-                $product_saved = $product_data->save();
+                dd('saved');
+                // $product_saved = $product_data->save();
                 if($product_saved){
                     
                     $return_array['status'] = true;
@@ -117,10 +117,16 @@ class ProductController extends Controller
     
 
     public function get_product_detail(Request $request){
+        
         $return_array = ['status'=>false, 'message'=>''];
 
         $product_id = $request->input('product_id');
-        $products_detail = Products::where('id',$product_id)->first();
+
+        $stored_products = session()->get('products', []);
+        if(!in_array($product_id, $stored_products)){
+            $stored_products[] = $product_id;
+            session()->put('products',$stored_products);
+            $products_detail = Products::where('id',$product_id)->first();
         
         if($products_detail){
             $return_array['status'] = true;
@@ -129,12 +135,16 @@ class ProductController extends Controller
             $return_array['message'] = 'Product not found';
 
         }
+        }else{
+            $return_array['message'] = 'Product already Added';
+        }
 
-       
         return response()->json($return_array);
     }
 
     public function products_datatable(Request $request){
+
+        // dd($_POST);
 
         $columns = ['id','product_name','category_id','total_quantity','sold_quantity','price','product_status_id','image_url'];
 
@@ -145,8 +155,13 @@ class ProductController extends Controller
 
         $totalData = Products::count();
         $totalFiltered = $totalData;
-
-        $query = Products::with('status','category')->whereNotIn('product_status_id', [2]);
+        $status_id = $request->input('product_status_id');
+        $category_id = $request->input('category_id');
+        if($category_id == 'all'){
+            $query = Products::with('status','category')->where('product_status_id', $status_id);
+        }else{
+            $query = Products::with('status','category')->where([['product_status_id', $status_id],['category_id', $category_id]]);
+        }
         
         
         if (!empty($request->input('search.value'))) {
@@ -157,8 +172,8 @@ class ProductController extends Controller
             });
 
             // Update filtered data count
-            $totalFiltered = $query->count();
         }
+        $totalFiltered = $query->count();
 
         // Apply ordering, limit, and offset
         $products = $query->orderBy($order, $dir)
@@ -178,7 +193,7 @@ class ProductController extends Controller
             $nestedData['product_status_id'] = $product->status->title ?? 'Not specified';
             $nestedData['category_name'] = $product->category->name ?? 'Not specified';
         
-            $nestedData['image_url'] =  $product->image_url ?'<img src="'.asset('images/categories/'.$product->image_url).'" class="w-100">' : 'Not specified';
+            $nestedData['image_url'] =  $product->image_url ?'<img src="'.asset('images/categories/'.$product->image_url).'" class="w-50">' : 'Not specified';
 
             $nestedData['action'] = '<button class="btn btn-secondary btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0 me-2" title="Edit" OnClick = "open_edit_product_modal('.$product->id.')">Edit</button>';
             

@@ -15,6 +15,10 @@ $(document).ready(function(){
 
     });
 
+    $('#customers_selection_by_status').on('change',function(){
+        customer_table();
+    });
+
 
 
 });
@@ -36,6 +40,8 @@ function update_customer(){
             success : function(response){
                 if (response.status) {
                     console.log(response);
+                $('#edit_customer_modal').modal('hide');
+
                     customer_table();
 
                 }else{
@@ -109,6 +115,8 @@ function open_edit_customer_modal(customer_id){
 
 
 function customer_table(){
+    var customers_status = $('#customers_selection_by_status').val();
+
     if ($.fn.DataTable.isDataTable('#all_customers_table')){ 
         
         $('#all_customers_table').DataTable().destroy(); 
@@ -117,6 +125,7 @@ function customer_table(){
         "processing" : true,
         "serverSide" : true,
         "ajax" : {
+            "data" : {'customers_status':customers_status},
             "url" : base_url + '/get_all_customers',
             "type" : "POST",
             "dataType" : "JSON",
@@ -127,7 +136,7 @@ function customer_table(){
             {"data" : "first_name"},
             {"data" : "email"},
             {"data" : "phone"},
-            {"data" : "address"},
+            // {"data" : "address"},
             {"data" : "date_of_birth"},
             {"data" : "gender"},
             {"data" : "account_status"},
@@ -216,6 +225,39 @@ function delete_customer(customerId) {
         });
     }
 }
+
+// function get_customers_by_status(){
+//     var customers_status = $('#customers_selection_by_status').val();
+//     // console.log(customers_selection_by_status);
+
+//     if ($.fn.DataTable.isDataTable('#all_customers_table')){ 
+        
+//         $('#all_customers_table').DataTable().destroy(); 
+//     }
+//     $('#all_customers_table').DataTable({
+//         "processing" : true,
+//         "serverSide" : true,
+//         "ajax" : {
+//             "data" : {'customers_status':customers_status},
+//             "url" : base_url + '/get_all_customers',
+//             "type" : "POST",
+//             "dataType" : "JSON",
+//             "headers" : {'X-CSRF-TOKEN': $('meta[name = "csrf-token"]').attr('content')},
+//         },
+//         "columns" : [
+//             {"data" : "id"},
+//             {"data" : "first_name"},
+//             {"data" : "email"},
+//             {"data" : "phone"},
+//             // {"data" : "address"},
+//             {"data" : "date_of_birth"},
+//             {"data" : "gender"},
+//             {"data" : "account_status"},
+//             {"data" : "action"},
+//         ]
+//     });
+
+// }
 
         
 

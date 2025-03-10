@@ -18,7 +18,7 @@ class CustomerController extends Controller
             $return_array = ['status'=>false, 'message'=>''];
             $rules = [
                      'f_name'     => ['required', 'string', 'min:2', 'max:50'],
-                    'm_name'      => ['nullable', 'string', 'min:2', 'max:50'], 
+                    'm_name'      => ['nullable', 'string', 'min:1', 'max:50'], 
                     'l_name'      => ['required', 'string', 'min:2', 'max:50'],
                     'updated_email' => ['required', 'email'],
                     'updated_phone' => ['required', 'digits:10'], 
@@ -35,7 +35,7 @@ class CustomerController extends Controller
                  $first_name = $request->input('f_name')?? '';
                  $middle_name = $request->input('m_name')?? '';
                  $last_name = $request->input('l_name')?? '';
-                 $email = $request->has('updated_email')? $request->input('updated_email') : '';
+                //  $email = $request->has('updated_email')? $request->input('updated_email') : '';
                  $phone = $request->input('updated_phone')?? '';
                  $address = $request->input('updated_address')?? '';
                  $date_of_birth = $request->input('updated_dob')?? '';
@@ -48,7 +48,7 @@ class CustomerController extends Controller
                     $user_data->first_name = $first_name;
                     $user_data->middle_name = $middle_name ?: null;
                     $user_data->last_name = $last_name;
-                    $user_data->email = $email;
+                    // $user_data->email = $email;
                     $user_data->phone = $phone;
                     $user_data->address = $address;
                     $user_data->date_of_birth = $date_of_birth;
@@ -94,7 +94,15 @@ class CustomerController extends Controller
         $totalData = Customers::count();
         $totalFiltered = $totalData;
 
-        $query = Customers::where('account_status','active');
+        $status = $request->input('customers_status');
+        // dd($status);
+        if($status == null || $status == 'active'){
+
+            $query = Customers::where('account_status','active');
+        }else{
+            $query = Customers::where('account_status','inactive');
+
+        }
         
         if (!empty($request->input('search.value'))) {
             $search = $request->input('search.value');
@@ -109,9 +117,9 @@ class CustomerController extends Controller
                    
             });
 
-            // Update filtered data count
-            $totalFiltered = $query->count();
         }
+        // Update filtered data count
+        $totalFiltered = $query->count();
 
         // Apply ordering, limit, and offset
         $Customers = $query->orderBy($order, $dir)
@@ -128,7 +136,7 @@ class CustomerController extends Controller
             $nestedData['first_name'] = $customer->first_name ?? 'Not specified';
             $nestedData['email'] = $customer->email ?? 'Not specified';
             $nestedData['phone'] = $customer->phone ?? 'Not specified';
-            $nestedData['address'] = $customer->address ?? 'Not specified';
+            // $nestedData['address'] = $customer->address ?? 'Not specified';
             $nestedData['date_of_birth'] = $customer->date_of_birth ?? 'Not specified';
             $nestedData['gender'] = $customer->gender ?? 'Not specified';
             $nestedData['account_status'] = $customer->account_status ?? 'Not specified';
@@ -153,55 +161,64 @@ class CustomerController extends Controller
 
     public function add_customers(Request $request){
         $return_array = ['status'=>false, 'message'=>''];
-        $rules = [
-                 'first_name'    => ['required', 'string', 'min:2', 'max:50'],
-                'middle_name'   => ['nullable', 'string', 'min:2', 'max:50'], 
-                'last_name'     => ['required', 'string', 'min:2', 'max:50'],
-                'email'         => ['required', 'email', 'unique:customers,email'],
-                'phone'         => ['required', 'digits:10', 'unique:customers,phone'], 
-                'address'       => ['required', 'string', 'max:255'],
-                'dob' => ['required', 'date', 'before:today'],
-                'gender'        => ['required'], 
-        ];
-        $validator = Validator::make($request->all(),$rules);
-        if ($validator->fails()) {
-             return response()->json(['status'=>false,'errors'=>$validator->errors()],422);
+
+        $customer_inactive = Customers::where([['email',$request->input('email')],['account_status','inactive']])->first();
+        if($customer_inactive){
+            $return_array['message'] = "Customer already addedd and its inactive";
+
         }else{
-             $first_name = $request->input('first_name')?? '';
-             $middle_name = $request->input('middle_name')?? '';
-             $last_name = $request->input('middle_name')?? '';
-             $email = $request->has('email')? $request->input('email') : '';
-             $phone = $request->input('phone')?? '';
-             $address = $request->input('address')?? '';
-             $date_of_birth = $request->input('dob')?? '';
-             $gender = $request->input('gender')?? '';
+            $rules = [
+                'first_name'    => ['required', 'string', 'min:2', 'max:50'],
+               'middle_name'   => ['nullable', 'string', 'min:2', 'max:50'], 
+               'last_name'     => ['required', 'string', 'min:2', 'max:50'],
+               'email'         => ['required', 'email', 'unique:customers,email'],
+               'phone'         => ['required', 'digits:10', 'unique:customers,phone'], 
+               'address'       => ['required', 'string', 'max:255'],
+               'dob' => ['required', 'date', 'before:today'],
+               'gender'        => ['required'], 
+       ];
+       $validator = Validator::make($request->all(),$rules);
+       if ($validator->fails()) {
+            return response()->json(['status'=>false,'errors'=>$validator->errors()],422);
+       }else{
+           dd('checking');
+            $first_name = $request->input('first_name')?? '';
+            $middle_name = $request->input('middle_name')?? '';
+            $last_name = $request->input('middle_name')?? '';
+            $email = $request->has('email')? $request->input('email') : '';
+            $phone = $request->input('phone')?? '';
+            $address = $request->input('address')?? '';
+            $date_of_birth = $request->input('dob')?? '';
+            $gender = $request->input('gender')?? '';
 
-             $email_exist = Customers::where('email',$email)->exists();
-             if (!$email_exist) {
-                $user_data = new Customers();
-                $user_data->first_name = $first_name;
-                $user_data->middle_name = $middle_name;
-                $user_data->last_name = $last_name;
-                $user_data->email = $email;
-                $user_data->phone = $phone;
-                $user_data->address = $address;
-                $user_data->date_of_birth = $date_of_birth;
-                $user_data->gender = $gender;
-                
-                $is_added = $user_data->save();
+            $email_exist = Customers::where('email',$email)->exists();
+            if (!$email_exist) {
+               $user_data = new Customers();
+               $user_data->first_name = $first_name;
+               $user_data->middle_name = $middle_name;
+               $user_data->last_name = $last_name;
+               $user_data->email = $email;
+               $user_data->phone = $phone;
+               $user_data->address = $address;
+               $user_data->date_of_birth = $date_of_birth;
+               $user_data->gender = $gender;
+               
+               $is_added = $user_data->save();
 
-                if($is_added){
-                    $return_array['status'] = true;
-                    $return_array['message'] = "Added Successfully";
-                    }
-                else{
-                    $return_array['message'] = "Failed Try Again";
-                }
-             }else{
-                $return_array['message'] = "Email Already Exist";
-             }
-            
+               if($is_added){
+                   $return_array['status'] = true;
+                   $return_array['message'] = "Added Successfully";
+                   }
+               else{
+                   $return_array['message'] = "Failed Try Again";
+               }
+            }else{
+               $return_array['message'] = "Email Already Exist";
+            }
+           
+       }
         }
+        
         return response()->json($return_array);
     }
 
@@ -231,4 +248,6 @@ class CustomerController extends Controller
         return response()->json($return_array);
 
     }
+
+   
 }

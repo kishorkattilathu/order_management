@@ -47,17 +47,32 @@ class OrderController extends Controller
         if ($validator->fails()) {
              return response()->json(['status'=>false,'errors'=>$validator->errors()],422);
         }else{
+
+            
              $customer_id = $request->input('customer_id')?? '';
              $product_ids = $request->input('product_ids')?? '';
              $product_prices = $request->input('product_price')?? '';
              $product_qtys = $request->input('product_qty')?? '';
+             $data = [
+                $product_prices,$product_qtys
+             ];
+             $total_price = [];
+
+             foreach ($product_prices as $key => $price) {
+                 $total_price[$key] = $price * $product_qtys[$key];
+             }
+            
+            //  dd($total_price);
+            //  dd(array_sum($total_price));
+            //  dd(array_sum($product_qtys));
 
             $customer = Customers::where('id',$customer_id)->first();
 
             $order = new Orders();
             $order->customer_id = $customer_id;
             $order->total_quantity = array_sum($product_qtys);
-            $order->total_amount = array_sum($product_prices);
+            $order->total_amount = array_sum($total_price);
+            // $order->total_amount = $total_price;
             $order->order_date = date('Y-m-d');
             $order->order_status_id = 1;
             $order->save();

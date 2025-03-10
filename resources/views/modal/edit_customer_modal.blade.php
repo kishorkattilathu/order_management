@@ -38,7 +38,7 @@
                     <!-- Email -->
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="updated_email" name="updated_email" required>
+                        <input type="email" readonly class="form-control" id="updated_email" name="updated_email" required>
                         <span id="error-updated_email" class="text-danger"></span>
 
                     </div>

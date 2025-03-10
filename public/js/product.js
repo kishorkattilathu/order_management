@@ -11,11 +11,21 @@ $(document).ready(function(){
     $('#save_product_btn').on('click',function(){
         save_product();
     });
+    $('#product_status').on('change',function(){
+        products_datatable();
+    });
+
+    $('#categories').on('change',function(){
+        products_datatable();
+    });
 });
 
 
 function products_datatable()
 {
+    var category_id = $('#categories').val();
+    var product_status_id = $('#product_status').val();
+    console.log(product_status_id);
     if ($.fn.DataTable.isDataTable('#products_datatable')){ 
         $('#products_datatable').DataTable().destroy(); 
     }
@@ -24,6 +34,7 @@ function products_datatable()
         "processing" : true,
         "serverSide" : true,
         "ajax" : {
+            "data": {'product_status_id':product_status_id, 'category_id':category_id},
             "url" : base_url + '/products_datatable',
             "type" : "POST",
             "dataType" : "JSON",
@@ -92,6 +103,8 @@ function remove_php_error(input_array){
 }
 
 function open_add_product_modal(){
+    var input_id = ['product_name','description','total_quantity','price','product_status_id','category_id','image_url'];
+    remove_php_error(input_id);
     $('#menu_label').html('Add Products');
     $('#product_id').val('');
     $('#product_name').val('');
@@ -107,6 +120,8 @@ function open_add_product_modal(){
 }
 
 function open_edit_product_modal(product_id){
+    var input_id = ['product_name','description','total_quantity','price','product_status_id','category_id','image_url'];
+    remove_php_error(input_id);
     $('#product_id').val(product_id);
     console.log('product_id',product_id);
 

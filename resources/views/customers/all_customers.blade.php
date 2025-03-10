@@ -3,7 +3,12 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Customers') }}
         </h2>
-        <div style="display: flex; justify-content: flex-end;">
+       
+        <div style="display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+            <select name="customers_selection_by_status" style="width: 100px" id="customers_selection_by_status" class="form-control">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+            </select>
             <button id="open_customer_modal" class="btn btn-success">Add+</button>
         </div>
         
@@ -17,7 +22,7 @@
                     <th data-breakpoints="md">First Name</th>
                     <th data-breakpoints="md">Email</th>
                     <th data-breakpoints="md">Phone</th>
-                    <th data-breakpoints="md">Address</th>
+                    {{-- <th data-breakpoints="md">Address</th> --}}
                     <th data-breakpoints="md">DOB</th>
                     <th data-breakpoints="md">Gender</th>
                     <th data-breakpoints="md">Status</th>

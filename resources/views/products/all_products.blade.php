@@ -4,6 +4,19 @@
             {{ __('Products') }}
         </h2>
         <div style="display: flex; justify-content: flex-end;">
+            <select name="categories" style="width: 150px" id="categories" class="form-control">
+                <option value="all">All Selected</option>
+                @foreach ($categories as $category){
+                    <option value="{{$category->id}}">{{$category->name}}</option>
+                }
+                @endforeach
+            </select>
+            <select name="product_status" style="width: 150px" id="product_status" class="form-control">
+                @foreach ($products_statuses as $product_status){
+                    <option value="{{$product_status->id}}">{{$product_status->title}}</option>
+                }
+                @endforeach
+            </select>
             <button id="open_add_product_modal" class="btn btn-success">Add+</button>
         </div>
         

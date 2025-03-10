@@ -53,6 +53,8 @@
                                 <option value="{{$category->id}}">{{$category->name}}</option>
                             @endforeach
                         </select>
+                        <span id="error-category_id" class="text-danger"></span>
+
                     </div>
                     <div id="div_old_image">
                         <img src="" id="old_image" style="width:100px" alt="Old Image">

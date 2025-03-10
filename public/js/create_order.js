@@ -13,18 +13,43 @@ $(document).ready(function(){
 
 function add_order_list(){
     console.log('add_order_list'); 
-
-
-   var product_id = $('#product_id').val();
-//    var customer_id = $('#customer_id').val();
-   var product_text = $('#product_id option:selected').text();
-
-
-
-   if (customer_id === "" || product_id === "") {
+    if (customer_id === "" || product_id === "") {
         alert("Please select both a customer and a product.");
         return;
     }
+
+    var product_id = $('#product_id').val();
+    //    var customer_id = $('#customer_id').val();
+    var product_text = $('#product_id option:selected').text();
+
+    //
+
+    // $.ajax({
+    //     url: base_url +'/add_order_to_session',
+    //     data : create_order_form,
+    //     type : 'POST',
+    //     dataType : 'JSON',
+    //     headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+    //     success : function(response){
+    //         if (response.status) {
+    //            alert(response.message);
+    //            window.location.href = response.redirect_url;
+
+    //         }else{
+    //             alert(response.message);
+    //         }
+    //     },
+    //     error : function(xhr,status,error){
+    //             console.log('xhr',xhr);
+    //             console.log('status',status);
+    //             console.log('error',error);
+    //             var response_error = xhr.responseJSON.errors;
+    //             display_php_error(response_error);
+    //     }
+    // });
+
+//
+  
 
     $.ajax({
         url: base_url +'/get_product_detail',
