@@ -17,6 +17,7 @@
                             <option value="{{$customer->id}}">{{$customer->email}}</option>
                         @endforeach
                     </select>
+                    <span class="text-danger" id="error-customer_id"></span>
                 </div>
                 <div class="col-md-4">
                     <select name="product_id" id="product_id" class="form-select">
@@ -54,6 +55,29 @@
             
            
         </div>
+
+        {{--  --}}
+        @foreach ($product_in_session as $key => $product)
+            {{-- @dd($product) --}}
+            <div class="row g-3 align-items-end order-item">
+                <div class="col-md-3">
+                    <input type="hidden" name="product_ids[]" class="product-id" value="{{$product['product_id']}}">
+                    <input id="product_price-{{$product['product_id']}}" type="hidden" name="product_price[]" value="{{$product['price']}}">
+                    <p class="">{{$product['name']}}</p>
+                </div>
+                <div class="col-md-3">
+                    <input  type="number" onChange="productQtyChange({{$product['product_id']}})" name="product_qty[]" data-product_id="{{$product['product_id']}}" id="product_qty-{{$product['product_id']}}" value="{{$product['qty']}}" min="1" class="form-control product_qty">
+                </div>
+                <div class="col-md-3">
+                    <div id="product_amount-{{$product['product_id']}}">{{$product['total_price']}} </div>
+                </div>
+                <div class="col-md-3 d-grid">
+                    <button type="button" class="btn btn-danger remove-product">Remove</button>
+                </div>
+            </div>
+        @endforeach
+        
+        {{--  --}}
         <div class="col-md-12 d-grid justify-content-center mt-3" >
             <button type="button" class="btn btn-primary" id="create_order_btn">Create+</button>
         </div>

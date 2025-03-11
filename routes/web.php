@@ -38,6 +38,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/get_product_detail', [ProductController::class, 'get_product_detail'])->name('get_product_detail');
     Route::post('/products_datatable', [ProductController::class, 'products_datatable'])->name('products_datatable');
     Route::post('/delete_product_by_id', [ProductController::class, 'delete_product_by_id'])->name('delete_product_by_id');
+    Route::post('/removeProductFromSession', [ProductController::class, 'removeProductFromSession'])->name('removeProductFromSession');
+    Route::post('/update_quantity_in_session', [ProductController::class, 'update_quantity_in_session'])->name('update_quantity_in_session');
     
     
     
@@ -46,6 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/all_orders', [OrderController::class, 'all_orders'])->name('all_orders');
     Route::post('/orders_datatable', [OrderController::class, 'orders_datatable'])->name('orders_datatable');
     Route::post('/cancel_order', [OrderController::class, 'cancel_order'])->name('cancel_order');
+    Route::post('/get_order_detail_by_id', [OrderController::class, 'get_order_detail_by_id'])->name('get_order_detail_by_id');
+    
+    
+    Route::get('/dumpsession', [ProductController::class, 'dumpsession'])->name('dumpsession');
+    Route::get('/testMail', [OrderController::class, 'testMail'])->name('testMail');
 
 });
 

@@ -124,10 +124,10 @@ class ProductController extends Controller
 
         $stored_products = session()->get('products', []);
         if(!in_array($product_id, $stored_products)){
-            $stored_products[] = $product_id;
-            session()->put('products',$stored_products);
+            
             $products_detail = Products::where('id',$product_id)->first();
-        
+            $stored_products[] =['product_id'=> $product_id,'qty'=> 1,'price' =>$products_detail->price,'name'=>$products_detail->product_name, 'total_price'=>''];
+            session()->put('products',$stored_products);
         if($products_detail){
             $return_array['status'] = true;
             $return_array['products_detail'] = $products_detail;
@@ -140,6 +140,39 @@ class ProductController extends Controller
         }
 
         return response()->json($return_array);
+    }
+
+    public function removeProductFromSession(Request $request){
+        $product_id = $request->input('product_id');
+        $stored_products = session('products', []); 
+        // dd($stored_products);
+
+        $stored_products = array_filter($stored_products, function ($product) use ($product_id) {
+            return $product['product_id'] != $product_id; 
+        });
+
+        session()->put('products', array_values($stored_products)); 
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
+    public function update_quantity_in_session(Request $request){
+        // dd($_POST);
+        $product_id = $request->input('product_id');
+        $product_qty = $request->input('product_qty');
+        $new_price = $request->input('product_total_amount');
+        $sessionProducts  = session('products',[]);
+        foreach($sessionProducts as $key=>$product){
+            if($product['product_id'] == $product_id){
+                $sessionProducts[$key]['total_price'] = $new_price;
+                $sessionProducts[$key]['qty'] = $product_qty;
+            }
+        }
+        session(['products'=> $sessionProducts]);
+        return response()->json(['status' => true, 'message'=> 'session updated']);
+
     }
 
     public function products_datatable(Request $request){
@@ -210,5 +243,10 @@ class ProductController extends Controller
             "data" => $data
         ];
         return response()->json($json_data);
+    }
+
+    public function dumpsession(Request $request){
+        $session = $request->session()->all();
+        dd($session);
     }
 }

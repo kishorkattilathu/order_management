@@ -9,7 +9,59 @@ $(document).ready(function(){
     $('#create_order_btn').on('click',function(){
         create_order();
     });
+    var input_array = ['customer_id'];
+    remove_php_error(input_array);
 });
+
+function open_order_modal(order_id) {
+    console.log("Fetching order:", order_id);
+
+    $.ajax({
+        url: base_url + "/get_order_detail_by_id",
+        type: "POST",
+        data: { order_id: order_id },
+        dataType: "JSON",
+        headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
+        success: function (response) {
+            if (response.status) {
+                let orderDetails = response.data;
+
+                if (orderDetails.length > 0) {
+                    let firstOrder = orderDetails[0]; 
+
+                    $("#order_no").val(firstOrder.id || "");
+                    $("#customer_name").val(firstOrder.customer_name || "");
+                    $("#total").val(firstOrder.total_amount || "");
+                    $("#order_date").val(firstOrder.order_date || "");
+                    $("#order_status").val(firstOrder.title || "");
+                    $("#payment_status").val(firstOrder.payment_status || "");
+                    $("#payment_type").val(firstOrder.payment_method || "");
+
+                    $("#product_fields").empty();
+
+                    orderDetails.forEach(function (item) {
+                        let row = `
+                        <tr>
+                            <td><input type="text" class="form-control" value="${item.product_name}" readonly></td>
+                            <td><input type="text" class="form-control" value="${item.product_quantity}" readonly></td>
+                            <td><input type="text" class="form-control" value="${item.product_amount}" readonly></td>
+                        </tr>`;
+                        $("#product_fields").append(row);
+                    });
+
+                    $("#order_modal").modal("show");
+                }
+            } else {
+                alert(response.message);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.log("AJAX Error:", error);
+        },
+    });
+}
+
+
 
 function add_order_list(){
     console.log('add_order_list'); 
@@ -105,19 +157,63 @@ function add_order_list(){
     
 }
 
-$(document).on('click', '.remove-product', function() {
-    $(this).closest('.order-item').remove();
+// $(document).on('click', '.remove-product', function() {
+//     $(this).closest('.order-item').remove();
+// });
+$(document).on('click', '.remove-product', function () {
+    var productElement = $(this).closest('.order-item'); 
+    // var product_id = productElement.data('product-id');
+    var product_id = productElement.find('.product-id').val();
+    console.log(product_id,'product_id');
+
+    $.ajax({
+        url : base_url +'/removeProductFromSession',
+        type: "POST",
+        data: {'product_id': product_id},
+        headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+        success: function (response) {
+            if (response.success) {
+                productElement.remove(); 
+            } else {
+                alert(response.message); 
+            }
+        }
+    });
 });
 
 function productQtyChange(product_id){
-    console.log('product_id',product_id);
+    // console.log('product_id',product_id);
 
     var product_qty = $('#product_qty-'+product_id).val();
+    // console.log(product_qty);
     var product_price = $('#product_price-'+product_id).val();
-
+    // console.log(product_price);
     var product_total_amount = parseInt(product_qty) * parseFloat(product_price);
 
-    $('#product_amount-'+product_id).html(product_total_amount);
+    $.ajax({
+        url: base_url +'/update_quantity_in_session',
+        data : {'product_id':product_id, 'product_total_amount':product_total_amount,'product_qty':product_qty},
+        type : 'POST',
+        dataType : 'JSON',
+        headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+        success : function(response){
+            if (response.status) {
+                // $('#product_amount-'+product_id).html(product_total_amount);
+                location.reload();
+
+            }else{
+                alert(response.message);
+            }
+        },
+        error : function(xhr,status,error){
+                console.log('xhr',xhr);
+                console.log('status',status);
+                console.log('error',error);
+                var response_error = xhr.responseJSON.errors;
+                display_php_error(response_error);
+        }
+    });
+
 
 }
 

@@ -12,6 +12,7 @@ use App\Models\Products;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Session;
 
 class OrderController extends Controller
 {
@@ -30,14 +31,33 @@ class OrderController extends Controller
         ]);
     }
 
-    public function create_orders(){
+    public function create_orders(Request $request){
+        // $request->session()->forget('products');
+        // $request->session()->flush();
+        // Session::forget('products');
+        
+
+        $session = $request->session()->get('products');
+        // dd($session);
+      // dd(array_column($session,'product_id'));
+        if (!empty($session)) {
+            // $productArray=array_column($session,'product_id');
+        
+            // $product_in_session = Products::whereIn('id', $productArray)->get(); 
+            $product_in_session = $session; 
+        } else {
+            $product_in_session = collect();
+        }
+        // dd($product_in_session);
+
         $customers = Customers::where('account_status','active')->get();
         // $products = Products::where('total_quantity','>', 0)->get();
         $products = Products::where([['total_quantity','>', 0],['product_status_id',1]])->get();
-        return view('order.create_orders',compact('customers','products'));
+        return view('order.create_orders',compact('customers','products','product_in_session'));
     }
 
     public function create_final_order(Request $request){
+
         $return_array = ['status'=>false, 'message'=>''];
         // dd($_POST);
         $rules = [
@@ -62,19 +82,15 @@ class OrderController extends Controller
                  $total_price[$key] = $price * $product_qtys[$key];
              }
             
-            //  dd($total_price);
-            //  dd(array_sum($total_price));
-            //  dd(array_sum($product_qtys));
-
             $customer = Customers::where('id',$customer_id)->first();
 
             $order = new Orders();
             $order->customer_id = $customer_id;
             $order->total_quantity = array_sum($product_qtys);
             $order->total_amount = array_sum($total_price);
-            // $order->total_amount = $total_price;
-            $order->order_date = date('Y-m-d');
+            $order->order_date = date('Y-m-d H:i:s');
             $order->order_status_id = 1;
+            // dd($order);
             $order->save();
             $order_id = $order->id;
             
@@ -100,11 +116,10 @@ class OrderController extends Controller
                         $product_detail->total_quantity = (int)$product_detail->total_quantity - (int)$product_quantity;
                         $product_detail->sold_quantity = (int)$product_detail->sold_quantity + (int)$product_quantity;
                         $product_detail->save();
-
                         
                     }
                 }
-                
+                // dd($order);
                 Mail::to($customer->email)->queue(new OrderConfirmationMail($order));
                 
                 $return_array['status'] = true;
@@ -162,10 +177,11 @@ class OrderController extends Controller
 
             if($order->order_status_id != 6 ){
                 $nestedData['action'] =  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0" onClick = "cancel_order('.$order->id.')" title="Cancel order"> Cancel</button>';
+                $nestedData['action'] .=  '<button class="btn btn-secondary type="button" onClick = "open_order_modal('.$order->id.')" style="margin-left: 5px;" btn-icon btn-circle btn-sm hov-svg-white mt-2  mt-sm-0"  title="View order"> View</button>';
             }else{
-                $nestedData['action'] =  '<button class="btn btn-primary btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0"  title="Cancel order"> Cant cancel</button>';
+                $nestedData['action'] =  '<button class="btn btn-primary btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0"  title="Cancel order"> Cancelled</button>';
             }
-           
+            
                         
             $data[] = $nestedData;
         }
@@ -230,5 +246,44 @@ class OrderController extends Controller
         }
         return response()->json($return_array);
 
+    }
+
+    public function testMail(){
+        $order['id'] = 1;
+        $order['total_amount'] = 100;
+        $is_sent = Mail::to('kk26july@gmail.com')->queue(new OrderConfirmationMail($order));
+        if($is_sent){
+            return response()->json(['message'=> 'Mail Sent', 'status'=>true]);
+        }else{
+            return response()->json(['message'=> 'Failed to send meail', 'status'=>false]);
+
+        }
+    }
+
+    public function get_order_detail_by_id(Request $request){
+        $return_array = ['status'=> false, 'message'=>''];
+        $order_id = $request->input('order_id');
+        // $order_detail = Orders::with(['order_details', 'products', 'customers'])
+        //                   ->where('id', $order_id)
+        //                   ->first();
+        $order_detail = Orders::select('orders.*', 'customers.first_name as customer_name','products.product_name'
+        ,'order_details.product_id','order_details.product_quantity','order_details.product_amount','order_details.product_total_amount','order_statuses.title')
+        ->leftJoin('order_details', 'order_details.order_id', '=', 'orders.id')
+        ->leftJoin('customers', 'orders.customer_id', '=', 'customers.id')
+        ->leftJoin('products', 'order_details.product_id', '=', 'products.id')
+        ->leftJoin('order_statuses', 'orders.order_status_id', '=', 'order_statuses.id')
+        ->where('orders.id', $order_id)
+        ->get();
+        // dd($order_detail);
+        if($order_detail){
+            $return_array['status'] = true;
+            $return_array['message'] = "Data Fetched Successfully";
+            $return_array['data'] = $order_detail;
+        }else{
+            $return_array['message'] = "Order Not Found";
+
+        }
+
+        return response()->json($return_array);
     }
 }

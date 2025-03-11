@@ -181,7 +181,7 @@ class CustomerController extends Controller
        if ($validator->fails()) {
             return response()->json(['status'=>false,'errors'=>$validator->errors()],422);
        }else{
-           dd('checking');
+        //    dd('checking');
             $first_name = $request->input('first_name')?? '';
             $middle_name = $request->input('middle_name')?? '';
             $last_name = $request->input('middle_name')?? '';

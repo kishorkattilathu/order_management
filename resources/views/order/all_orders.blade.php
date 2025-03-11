@@ -29,4 +29,5 @@
     </div>
 
     <script src="{{asset('js/create_order.js')}}"></script>
+    @include('modal.order_modal');
 </x-app-layout>
