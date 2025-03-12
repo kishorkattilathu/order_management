@@ -45,12 +45,9 @@ class ProductController extends Controller
     }
 
     public function add_product(Request $request){
-        // dd($_POST);
+        
         $return_array = ['status'=>false, 'message'=>''];
         $userId = Auth::user()->id;
-        // dd($userId);
-
-        
 
         $rules = [
             'product_name' => 'required|string|max:255',
@@ -99,8 +96,7 @@ class ProductController extends Controller
                     $image->move('images/categories',$file_name);
                     $product_data->image_url = $file_name;
                 }
-                dd('saved');
-                // $product_saved = $product_data->save();
+                $product_saved = $product_data->save();
                 if($product_saved){
                     
                     $return_array['status'] = true;
@@ -110,7 +106,6 @@ class ProductController extends Controller
                     $return_array['message'] = "Failed Please try again";
                 }
             }
-            
             return response()->json($return_array);
         }
 
@@ -123,17 +118,25 @@ class ProductController extends Controller
         $product_id = $request->input('product_id');
 
         $stored_products = session()->get('products', []);
-        if(!in_array($product_id, $stored_products)){
+        $stored_product_ids = array_column($stored_products,'product_id');
+        // dd($stored_products);
+        if(!in_array($product_id, $stored_product_ids)){
             
             $products_detail = Products::where('id',$product_id)->first();
-            $stored_products[] =['product_id'=> $product_id,'qty'=> 1,'price' =>$products_detail->price,'name'=>$products_detail->product_name, 'total_price'=>''];
+            $stored_products[] =['product_id'=> $product_id,'qty'=> 1,'price' =>$products_detail->price,'name'=>$products_detail->product_name, 'total_price'=>$products_detail->price];
             session()->put('products',$stored_products);
+            $total_price_sum = array_sum(array_column($stored_products, 'total_price'));
+            session()->put('total_price_sum', $total_price_sum);
+            // dd($total_price_sum);
+            $get_total_price_sum = session()->get('total_price_sum');
+            // dd($get_total_price_sum);
+
         if($products_detail){
             $return_array['status'] = true;
             $return_array['products_detail'] = $products_detail;
+            $return_array['total_price_sum'] = $get_total_price_sum;
         }else{
             $return_array['message'] = 'Product not found';
-
         }
         }else{
             $return_array['message'] = 'Product already Added';
@@ -142,10 +145,25 @@ class ProductController extends Controller
         return response()->json($return_array);
     }
 
+    public function get_product_detail_by_id(Request $request){
+        
+        $return_array = ['status'=>false, 'message'=>''];
+
+        $product_id = $request->input('product_id');
+        $products_detail = Products::where('id',$product_id)->first();
+           
+        if($products_detail){
+            $return_array['status'] = true;
+            $return_array['products_detail'] = $products_detail;
+        }else{
+            $return_array['message'] = 'Product not found';
+        }
+        return response()->json($return_array);
+    }
+
     public function removeProductFromSession(Request $request){
         $product_id = $request->input('product_id');
         $stored_products = session('products', []); 
-        // dd($stored_products);
 
         $stored_products = array_filter($stored_products, function ($product) use ($product_id) {
             return $product['product_id'] != $product_id; 
@@ -159,7 +177,7 @@ class ProductController extends Controller
     }
 
     public function update_quantity_in_session(Request $request){
-        // dd($_POST);
+
         $product_id = $request->input('product_id');
         $product_qty = $request->input('product_qty');
         $new_price = $request->input('product_total_amount');
@@ -171,13 +189,18 @@ class ProductController extends Controller
             }
         }
         session(['products'=> $sessionProducts]);
-        return response()->json(['status' => true, 'message'=> 'session updated']);
+        $stored_products = session('products',[]);
+        $total_price_sum = array_sum(array_column($stored_products, 'total_price'));
+        session()->put('total_price_sum', $total_price_sum);
+        $get_total_price_sum = session()->get('total_price_sum');
+        // dd($get_total_price_sum);
 
+        // dd($stored_products);
+        return response()->json(['status' => true, 'message'=> 'session updated','product_data' => $stored_products,'total_price_sum'=>$get_total_price_sum]);
     }
 
     public function products_datatable(Request $request){
 
-        // dd($_POST);
 
         $columns = ['id','product_name','category_id','total_quantity','sold_quantity','price','product_status_id','image_url'];
 

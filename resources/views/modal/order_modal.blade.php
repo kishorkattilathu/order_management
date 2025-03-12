@@ -44,8 +44,13 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="order_status" class="form-label">Order Status</label>
-                            <input type="text" class="form-control" id="order_status" name="order_status" readonly>
+                            <select class="form-control" name="order_status" id="order_status">
+                                @foreach ($order_status as $status)
+                                    <option value="{{$status->id}}">{{$status->title}}</option>
+                                @endforeach
+                            </select>
                         </div>
+                        
                     </div>
 
                     <div class="row">
@@ -63,6 +68,8 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="update_order_status_btn" class="btn btn-primary">Update</button>
+
             </div>
         </div>
     </div>

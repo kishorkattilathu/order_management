@@ -120,6 +120,7 @@ function open_add_product_modal(){
 }
 
 function open_edit_product_modal(product_id){
+    console.log('open_edit_product_modal',product_id);
     var input_id = ['product_name','description','total_quantity','price','product_status_id','category_id','image_url'];
     remove_php_error(input_id);
     $('#product_id').val(product_id);
@@ -130,7 +131,7 @@ function open_edit_product_modal(product_id){
             data : {'product_id':product_id},
             type : 'POST',
             datatype : 'JSON',
-            url : base_url + '/get_product_detail',
+            url : base_url + '/get_product_detail_by_id',
             headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
             success: function(response){
                 if (response.status) {

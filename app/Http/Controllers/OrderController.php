@@ -17,12 +17,14 @@ use Illuminate\Support\Facades\Session;
 class OrderController extends Controller
 {
 
-    public function all_orders(){
-        
-        return view('order.all_orders');
+    public function all_orders(Request $request){
+        $request->session()->forget(['products','total_price_sum']);
+        $order_status = OrderStatuses::all();
+        return view('order.all_orders',compact('order_status'));
     }
 
     public function get_all_orders(){
+       
         $orders = Orders::with(['customer', 'orderDetails.product'])->get();
 
         return response()->json([
@@ -32,36 +34,25 @@ class OrderController extends Controller
     }
 
     public function create_orders(Request $request){
-        // $request->session()->forget('products');
-        // $request->session()->flush();
-        // Session::forget('products');
-        
-
+       
         $session = $request->session()->get('products');
-        // dd($session);
-      // dd(array_column($session,'product_id'));
         if (!empty($session)) {
-            // $productArray=array_column($session,'product_id');
-        
-            // $product_in_session = Products::whereIn('id', $productArray)->get(); 
+           
             $product_in_session = $session; 
         } else {
             $product_in_session = collect();
         }
-        // dd($product_in_session);
 
         $customers = Customers::where('account_status','active')->get();
-        // $products = Products::where('total_quantity','>', 0)->get();
         $products = Products::where([['total_quantity','>', 0],['product_status_id',1]])->get();
         return view('order.create_orders',compact('customers','products','product_in_session'));
     }
 
     public function create_final_order(Request $request){
-
         $return_array = ['status'=>false, 'message'=>''];
-        // dd($_POST);
         $rules = [
                 'customer_id'        => ['required'], 
+
         ];
         $validator = Validator::make($request->all(),$rules);
         if ($validator->fails()) {
@@ -73,6 +64,10 @@ class OrderController extends Controller
              $product_ids = $request->input('product_ids')?? '';
              $product_prices = $request->input('product_price')?? '';
              $product_qtys = $request->input('product_qty')?? '';
+             if(empty($product_ids||$product_prices||$product_qtys)){
+                return response()->json(['status'=>false,'message'=>'Please add product first']);
+             }
+             
              $data = [
                 $product_prices,$product_qtys
              ];
@@ -90,7 +85,6 @@ class OrderController extends Controller
             $order->total_amount = array_sum($total_price);
             $order->order_date = date('Y-m-d H:i:s');
             $order->order_status_id = 1;
-            // dd($order);
             $order->save();
             $order_id = $order->id;
             
@@ -119,7 +113,6 @@ class OrderController extends Controller
                         
                     }
                 }
-                // dd($order);
                 Mail::to($customer->email)->queue(new OrderConfirmationMail($order));
                 
                 $return_array['status'] = true;
@@ -140,7 +133,7 @@ class OrderController extends Controller
         $limit = $request->input('length');
         $start = $request->input('start');
         $order = $columns[$request->input('order.0.column')];
-        $dir = $request->input('order.0.dir','desc');
+        $dir = $request->input('order.3.dir','desc');
 
         $totalData = Orders::count();
         $totalFiltered = $totalData;
@@ -267,7 +260,7 @@ class OrderController extends Controller
         //                   ->where('id', $order_id)
         //                   ->first();
         $order_detail = Orders::select('orders.*', 'customers.first_name as customer_name','products.product_name'
-        ,'order_details.product_id','order_details.product_quantity','order_details.product_amount','order_details.product_total_amount','order_statuses.title')
+        ,'order_details.product_id','order_details.product_quantity','order_details.product_amount','order_details.product_total_amount','order_statuses.title','order_statuses.id as order_status_id')
         ->leftJoin('order_details', 'order_details.order_id', '=', 'orders.id')
         ->leftJoin('customers', 'orders.customer_id', '=', 'customers.id')
         ->leftJoin('products', 'order_details.product_id', '=', 'products.id')
@@ -284,6 +277,45 @@ class OrderController extends Controller
 
         }
 
+        return response()->json($return_array);
+    }
+
+    public function update_order_status(Request $request){
+        $return_array = ['status'=>false, 'message'=>''];
+
+        $order_status_id = $request->input('order_status_id');
+        $order_id = $request->input('order_id');
+
+        $is_delivered = Orders::find($order_id);
+        $status = $is_delivered->order_status_id;
+        if($status == 5 ){
+            return response()->json(['message' => 'Order already delivered cant update']);
+        }
+       
+        if($order_id){
+            $order = Orders::find($order_id);
+            $order->order_status_id = $order_status_id;
+            $order_updated = $order->save();
+            if($order_updated){
+
+                if($order->order_status_id == 5){
+                    $order->payment_status = 'paid';
+                    $order->save();
+                }else{
+                    $return_array['message'] = 'Failed to update payment status';
+
+                }
+                $return_array['status'] = true;
+                $return_array['message'] = 'Order Updated';
+
+            }else{
+                $return_array['message'] = 'Failed Try Again';
+
+            }
+        }else{
+            $return_array['message'] = 'Order does not exist';
+        }
+        
         return response()->json($return_array);
     }
 }

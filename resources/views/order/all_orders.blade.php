@@ -4,7 +4,7 @@
             {{ __('All Orders') }}
         </h2>
         <div style="display: flex; justify-content: flex-end;">
-            <a class="btn btn-success" href="{{url('/create_orders')}}">Add</a>
+            <a class="btn btn-success" href="{{url('/create_orders')}}">Create New Order</a>
         </div>
         
     </x-slot>

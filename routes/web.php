@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/products', [ProductController::class, 'products'])->name('products');
     Route::post('/add_product', [ProductController::class, 'add_product'])->name('add_product');
     Route::post('/get_product_detail', [ProductController::class, 'get_product_detail'])->name('get_product_detail');
+    Route::post('/get_product_detail_by_id', [ProductController::class, 'get_product_detail_by_id'])->name('get_product_detail_by_id');
     Route::post('/products_datatable', [ProductController::class, 'products_datatable'])->name('products_datatable');
     Route::post('/delete_product_by_id', [ProductController::class, 'delete_product_by_id'])->name('delete_product_by_id');
     Route::post('/removeProductFromSession', [ProductController::class, 'removeProductFromSession'])->name('removeProductFromSession');
@@ -49,6 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders_datatable', [OrderController::class, 'orders_datatable'])->name('orders_datatable');
     Route::post('/cancel_order', [OrderController::class, 'cancel_order'])->name('cancel_order');
     Route::post('/get_order_detail_by_id', [OrderController::class, 'get_order_detail_by_id'])->name('get_order_detail_by_id');
+    Route::post('/update_order_status', [OrderController::class, 'update_order_status'])->name('update_order_status');
     
     
     Route::get('/dumpsession', [ProductController::class, 'dumpsession'])->name('dumpsession');
