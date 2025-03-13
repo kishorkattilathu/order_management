@@ -110,9 +110,7 @@ function open_edit_customer_modal(customer_id){
     }else{
         alert('Menu does not exist');
     }
-    // $('#edit_customer_modal').modal('show');
 }
-
 
 function customer_table(){
     var customers_status = $('#customers_selection_by_status').val();
@@ -145,8 +143,6 @@ function customer_table(){
     });
 }
 
-
-
 function add_customer(){
     var input_id = ['first_name','middle_name','last_name','email','phone','address','dob','gender'];
     remove_error(input_id);
@@ -160,11 +156,19 @@ function add_customer(){
             headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
             success : function(response){
                 if (response.status) {
-                   
-                    customer_table();
+                $('#add_customer_modal').modal('hide');
+                toastr.options = {
+                    "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                toastr.success(response.message);
+                customer_table();
 
                 }else{
-                    alert(response.message);
+                toastr.error(response.message);
                 }
             },
             error : function(xhr,status,error){
@@ -205,16 +209,25 @@ function delete_customer(customerId) {
     if (confirm('Are you sure you want to delete this customer?')) {
         $.ajax({
             url: base_url + '/delete_customer_by_id',
-            type: 'POST',
+            type: 'POST', 
             data: { 'customer_id': customerId }, 
             dataType: 'JSON',
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             success: function(response) {
                 if (response.status) {
-                    alert('Customer deleted successfully!');
+                    toastr.options = {
+                        "positionClass": "toast-center", // Custom class for center alignment
+                        "timeOut": "3000", // Auto close after 3 seconds
+                        "extendedTimeOut": "1000",
+                        "closeButton": true,
+                        "progressBar": true
+                    };
+                    toastr.success(response.message);
+                    // alert('Customer deleted successfully!');
                     customer_table();
                 } else {
-                    alert(response.message || 'Failed to delete customer.');
+                    // alert(response.message || 'Failed to delete customer.');
+                    toastr.error(response.message);
                 }
             },
             error: function(xhr, status, error) {

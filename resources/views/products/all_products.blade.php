@@ -12,12 +12,13 @@
                 @endforeach
             </select>
             <select name="product_status" style="width: 150px" id="product_status" class="form-control">
+                    <option value="all">All Selected</option>
                 @foreach ($products_statuses as $product_status){
                     <option value="{{$product_status->id}}">{{$product_status->title}}</option>
                 }
                 @endforeach
             </select>
-            <button id="open_add_product_modal" class="btn btn-success">Add+</button>
+            <button id="open_add_product_modal" class="btn btn-success">Add Products+</button>
         </div>
         
     </x-slot>
@@ -30,8 +31,8 @@
                     <th data-breakpoints="md">Name</th>
                     <th data-breakpoints="md">Image</th>
                     <th data-breakpoints="md">Category</th>
-                    <th data-breakpoints="md">Total Quantity</th>
-                    <th data-breakpoints="md">Sold Quantity</th>
+                    <th data-breakpoints="md">Stock</th>
+                    <th data-breakpoints="md">Sold</th>
                     <th data-breakpoints="md">Price</th>
                     <th data-breakpoints="md">Status</th>
                     <th data-breakpoints="md" style="width:190px;">Action</th>

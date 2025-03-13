@@ -9,7 +9,7 @@
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
             </select>
-            <button id="open_customer_modal" class="btn btn-success">Add+</button>
+            <button id="open_customer_modal" class="btn btn-success">Add Customers +</button>
         </div>
         
     </x-slot>

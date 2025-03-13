@@ -20,22 +20,19 @@ class ProductController extends Controller
     }
 
     public function delete_product_by_id(Request $request){
-        // dd($_POST);
         $return_array = ['status'=>false, 'message'=>'', 'data' => null];
 
         $product_id = $request->input('product_id');
         if ($product_id) {
-            $delete_product = Products::where('id',$product_id)->first();
-            $inactive = 2;
-             $delete_product->product_status_id =$inactive;
-             $deleted = $delete_product->save();
+            
+            $product = Products::find($product_id);
+            $deleted = $product->delete();
             if($deleted){
                 $return_array['status'] = true;
                 $return_array['message'] = 'product deleted successfully';
 
             }else{
                 $return_array['message'] = 'Failed try again';
-
             }
         }else{
             $return_array['message'] = 'product Not Found';
@@ -119,7 +116,6 @@ class ProductController extends Controller
 
         $stored_products = session()->get('products', []);
         $stored_product_ids = array_column($stored_products,'product_id');
-        // dd($stored_products);
         if(!in_array($product_id, $stored_product_ids)){
             
             $products_detail = Products::where('id',$product_id)->first();
@@ -127,9 +123,7 @@ class ProductController extends Controller
             session()->put('products',$stored_products);
             $total_price_sum = array_sum(array_column($stored_products, 'total_price'));
             session()->put('total_price_sum', $total_price_sum);
-            // dd($total_price_sum);
             $get_total_price_sum = session()->get('total_price_sum');
-            // dd($get_total_price_sum);
 
         if($products_detail){
             $return_array['status'] = true;
@@ -193,14 +187,11 @@ class ProductController extends Controller
         $total_price_sum = array_sum(array_column($stored_products, 'total_price'));
         session()->put('total_price_sum', $total_price_sum);
         $get_total_price_sum = session()->get('total_price_sum');
-        // dd($get_total_price_sum);
 
-        // dd($stored_products);
         return response()->json(['status' => true, 'message'=> 'session updated','product_data' => $stored_products,'total_price_sum'=>$get_total_price_sum]);
     }
 
     public function products_datatable(Request $request){
-
 
         $columns = ['id','product_name','category_id','total_quantity','sold_quantity','price','product_status_id','image_url'];
 
@@ -211,15 +202,19 @@ class ProductController extends Controller
 
         $totalData = Products::count();
         $totalFiltered = $totalData;
-        $status_id = $request->input('product_status_id');
+        $product_status_id = $request->input('product_status_id');
         $category_id = $request->input('category_id');
-        if($category_id == 'all'){
-            $query = Products::with('status','category')->where('product_status_id', $status_id);
-        }else{
-            $query = Products::with('status','category')->where([['product_status_id', $status_id],['category_id', $category_id]]);
+
+        $query = Products::with('status', 'category');
+
+        if ($category_id !== 'all') {
+            $query->where('category_id', $category_id);
         }
         
-        
+        if ($product_status_id !== 'all') {
+            $query->where('product_status_id', $product_status_id);
+        }
+      
         if (!empty($request->input('search.value'))) {
             $search = $request->input('search.value');
             $query->where(function($q) use ($search) {
@@ -247,9 +242,9 @@ class ProductController extends Controller
             $nestedData['sold_quantity'] = $product->sold_quantity ?? 'Not specified';
             $nestedData['price'] = $product->price ?? 'Not specified';
             $nestedData['product_status_id'] = $product->status->title ?? 'Not specified';
-            $nestedData['category_name'] = $product->category->name ?? 'Not specified';
+            $nestedData['category_name'] = $product->category->name ?? 'None';
         
-            $nestedData['image_url'] =  $product->image_url ?'<img src="'.asset('images/categories/'.$product->image_url).'" class="w-50">' : 'Not specified';
+            $nestedData['image_url'] =  $product->image_url ?'<img src="'.asset('images/categories/'.$product->image_url).'" class="w-50">' : '<img src="'.asset('images/categories/default.png').'" class="w-50">';
 
             $nestedData['action'] = '<button class="btn btn-secondary btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0 me-2" title="Edit" OnClick = "open_edit_product_modal('.$product->id.')">Edit</button>';
             

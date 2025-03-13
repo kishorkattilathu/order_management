@@ -63,6 +63,7 @@
                     <div class="mb-3">
                         <label for="image_url" class="form-label">Upload Image</label>
                         <input type="file" class="form-control" id="image_url" name="image_url" required accept="image/*">
+                        <img id="imagePreview" alt="Image Preview" width="150" style="display: none;">
                         <span id="error-image_url" class="text-danger"></span>
                     </div>
                 

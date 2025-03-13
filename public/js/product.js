@@ -1,4 +1,5 @@
 $(document).ready(function(){
+    $('#save_product_btn').html('Save');
 
     console.log('products js');
     products_datatable();
@@ -18,6 +19,24 @@ $(document).ready(function(){
     $('#categories').on('change',function(){
         products_datatable();
     });
+
+
+    $('#image_url').change(function (event) {
+        let file = event.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function (e) {
+                $('#imagePreview').attr('src', e.target.result).show(); 
+            };
+            reader.readAsDataURL(file);
+        }else{
+            resetPreview();
+        }
+        
+    });
+
+
+
 });
 
 
@@ -55,6 +74,7 @@ function products_datatable()
 }
 
 function save_product(){
+    $('#save_product_btn').html('loading...');
     var input_id = ['product_name','description','total_quantity','price','product_status_id','category_id','image_url'];
     remove_php_error(input_id);
     var form_data = new FormData($('#add_product_form')[0]);
@@ -70,12 +90,23 @@ function save_product(){
         headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
         success: function(response){
             if (response.status) {
+                
             $('#add_product_modal').modal('hide');
-
+            $('#save_product_btn').html('Save');
+            toastr.options = {
+                "positionClass": "toast-center",
+                "timeOut": "3000",
+                "extendedTimeOut": "1000",
+                "closeButton": true,
+                "progressBar": true
+            };
+            toastr.success(response.message);
                 products_datatable();
             }else{
+                $('#save_product_btn').html('Save');
 
-                alert(response.message);
+                toastr.error(response.message);
+
             }
         },
         error: function(xhr,status,error){
@@ -83,6 +114,7 @@ function save_product(){
             console.log('status',status);
             console.log('error',error);
 
+            $('#save_product_btn').html('Save');
 
             var response_message = xhr.responseJSON.errors;
             display_php_error(response_message);
@@ -103,6 +135,10 @@ function remove_php_error(input_array){
 }
 
 function open_add_product_modal(){
+
+    resetPreview();
+    $('#imageUpload').val('');
+
     var input_id = ['product_name','description','total_quantity','price','product_status_id','category_id','image_url'];
     remove_php_error(input_id);
     $('#menu_label').html('Add Products');
@@ -114,13 +150,19 @@ function open_add_product_modal(){
     $('#product_status_id').val('');
     $('#category_id').val('');
     $('#image_url').val('');
+    $('#imagePreview').hide('');
+    $('#imagePreview').val('');
     $('#div_old_image').hide();
 
     $('#add_product_modal').modal('show');
 }
 
+function resetPreview() {
+    $('#imagePreview').attr('src', 'images/categories/default.png').hide(); 
+}
+
 function open_edit_product_modal(product_id){
-    console.log('open_edit_product_modal',product_id);
+    // console.log('open_edit_product_modal',product_id);
     var input_id = ['product_name','description','total_quantity','price','product_status_id','category_id','image_url'];
     remove_php_error(input_id);
     $('#product_id').val(product_id);
@@ -136,6 +178,7 @@ function open_edit_product_modal(product_id){
             success: function(response){
                 if (response.status) {
                     var product = response.products_detail;
+                    console.log('product.image_url',product.image_url);
                     $('#div_old_image').show();
                     
                     $('#product_name').val(product.product_name);
@@ -144,7 +187,7 @@ function open_edit_product_modal(product_id){
                     $('#price').val(product.price);
                     $('#product_status_id').val(product.product_status_id).trigger('change');
                     $('#category_id').val(product.category_id).trigger('change');
-                    $('#old_image').attr('src','images/categories/'+product.image_url);
+                    $('#old_image').attr('src',product.image_url ? 'images/categories/'+product.image_url:'images/categories/default.png');
 
                     $('#menu_label').html('Update Products');
                     $('#add_product_modal').modal('show');
@@ -181,10 +224,17 @@ function delete_product(product_id){
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             success: function(response) {
                 if (response.status) {
-                    alert('Product deleted successfully!');
+                    toastr.options = {
+                        "positionClass": "toast-center", 
+                        "timeOut": "3000", 
+                        "extendedTimeOut": "1000",
+                        "closeButton": true,
+                        "progressBar": true
+                    };
+                    toastr.success(response.message);
                     products_datatable();
                 } else {
-                    alert(response.message || 'Failed to delete product.');
+                    toastr.success(response.message);
                 }
             },
             error: function(xhr, status, error) {

@@ -21,6 +21,31 @@
         <script src="https://cdn.datatables.net/2.2.1/js/dataTables.min.js"> </script>
         <script> var base_url = "{{url('/')}}";</script>
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <!-- Toastr CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+        <!-- Toastr JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+        <style>
+            .toast-center {
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                position: fixed;
+                z-index: 9999;
+            }
+        </style>
+        <!-- Bootstrap Toast -->
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div id="toastMessage" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        {{ session('success') ?? session('error') ?? session('info') ?? session('warning') }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
@@ -42,3 +67,11 @@
         </div>
     </body>
 </html>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var toast = new bootstrap.Toast(document.getElementById('toastMessage'));
+        @if(session('success') || session('error') || session('info') || session('warning'))
+            toast.show();
+        @endif
+    });
+</script>
