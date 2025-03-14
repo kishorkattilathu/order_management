@@ -27,6 +27,7 @@
                                     <th>Product Name</th>
                                     <th>Quantity</th>
                                     <th>Price Per Qty.</th>
+                                    <th>Sub total</th>
                                 </tr>
                             </thead>
                             <tbody id="product_fields"></tbody>
@@ -34,15 +35,19 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label for="total" class="form-label">Grand Total</label>
                             <input type="text" class="form-control" id="total" name="total" readonly>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                             <label for="order_date" class="form-label">Order Date</label>
                             <input type="text" class="form-control" id="order_date" name="order_date" readonly>
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
+                            <label for="order_time" class="form-label">Order Time</label>
+                            <input type="text" class="form-control" id="order_time" name="order_time" readonly>
+                        </div>
+                        <div class="col-md-3 mb-3">
                             <label for="order_status" class="form-label">Order Status</label>
                             <select class="form-control" name="order_status" id="order_status">
                                 @foreach ($order_status as $status)

@@ -168,6 +168,13 @@ function add_customer(){
                 customer_table();
 
                 }else{
+                toastr.options = {
+                    "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
                 toastr.error(response.message);
                 }
             },
@@ -227,6 +234,13 @@ function delete_customer(customerId) {
                     customer_table();
                 } else {
                     // alert(response.message || 'Failed to delete customer.');
+                    toastr.options = {
+                        "positionClass": "toast-center",
+                        "timeOut": "3000",
+                        "extendedTimeOut": "1000",
+                        "closeButton": true,
+                        "progressBar": true
+                    };
                     toastr.error(response.message);
                 }
             },

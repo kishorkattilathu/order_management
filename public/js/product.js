@@ -231,9 +231,17 @@ function delete_product(product_id){
                         "closeButton": true,
                         "progressBar": true
                     };
+                    
                     toastr.success(response.message);
                     products_datatable();
                 } else {
+                    toastr.options = {
+                        "positionClass": "toast-center",
+                        "timeOut": "3000",
+                        "extendedTimeOut": "1000",
+                        "closeButton": true,
+                        "progressBar": true
+                    };
                     toastr.success(response.message);
                 }
             },

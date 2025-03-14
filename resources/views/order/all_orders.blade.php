@@ -19,6 +19,7 @@
                     <th data-breakpoints="md">Quantity</th>
                     <th data-breakpoints="md">Amount</th>
                     <th data-breakpoints="md">Order Date</th>
+                    <th data-breakpoints="md">Order Time</th>
                     <th data-breakpoints="md">Status</th>
                     <th data-breakpoints="md" style="width:190px;">Action</th>
                 </tr>

@@ -9,6 +9,7 @@ use App\Models\OrderDetails;
 use App\Models\Orders;
 use App\Models\OrderStatuses;
 use App\Models\Products;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
@@ -49,6 +50,7 @@ class OrderController extends Controller
     }
 
     public function create_final_order(Request $request){
+        
         $return_array = ['status'=>false, 'message'=>''];
         $rules = [
                 'customer_id'        => ['required'], 
@@ -61,24 +63,39 @@ class OrderController extends Controller
 
             
              $customer_id = $request->input('customer_id')?? '';
-             $product_ids = $request->input('product_ids')?? '';
-             $product_prices = $request->input('product_price')?? '';
-             $product_qtys = $request->input('product_qty')?? '';
-             if(empty($product_ids||$product_prices||$product_qtys)){
-                return response()->json(['status'=>false,'message'=>'Please add product first']);
-             }
+            //  $product_ids = $request->input('product_ids')?? '';
+            //  $product_prices = $request->input('product_price')?? '';
+            //  $product_qtys = $request->input('product_qty')?? '';
+            // //  if(empty($product_ids||$product_prices||$product_qtys)){
+            // //     return response()->json(['status'=>false,'message'=>'Please add product first']);
+            // //  }
+
+            // if (empty($product_ids) || empty($product_prices) || empty($product_qtys)) {
+            //     return response()->json(['status' => false, 'message' => 'Please add product first']);
+            // }
+            $product_ids = $request->input('product_ids', []);
+            $product_prices = $request->input('product_price', []);
+            $product_qtys = $request->input('product_qty', []);
+            // dd($product_ids);
+            // dd($product_prices);
+            // dd($product_qtys);
+            // if (!is_array($product_ids) || !is_array($product_prices) || !is_array($product_qtys)) {
+            //     return response()->json(['status' => false, 'message' => 'Invalid product data']);
+            // }
              
              $data = [
                 $product_prices,$product_qtys
              ];
+            //  dd($data);
              $total_price = [];
 
              foreach ($product_prices as $key => $price) {
                  $total_price[$key] = $price * $product_qtys[$key];
+                //  dd($total_price[$key]);
              }
             
             $customer = Customers::where('id',$customer_id)->first();
-
+            //  dd($customer);
             $order = new Orders();
             $order->customer_id = $customer_id;
             $order->total_quantity = array_sum($product_qtys);
@@ -91,9 +108,13 @@ class OrderController extends Controller
             if($order_id){
                 foreach ($product_ids as $key => $product_id) 
                 {
+                    // dd($product_id);
                     $product_amount =  $product_prices[$key];
+                    // dd($product_amount);
+
                     $product_quantity =  $product_qtys[$key];
                     $product_total_amount = (float)$product_amount * (int)$product_quantity;
+                    // dd($product_total_amount);
 
 
                     $order_detail = new OrderDetails();
@@ -118,6 +139,9 @@ class OrderController extends Controller
                 $return_array['status'] = true;
                 $return_array['message'] = 'Order Created Successfully';
                 $return_array['redirect_url'] = url('/all_orders');
+
+            }else{
+                $return_array['message'] = 'Failed to add in order details';
 
             }
            
@@ -165,15 +189,24 @@ class OrderController extends Controller
             $nestedData['customer_email'] = $order->customer->email ?? 'Not specified';
             $nestedData['total_quantity'] = $order->total_quantity ?? 'Not specified';
             $nestedData['total_amount'] = $order->total_amount ?? 'Not specified';
-            $nestedData['order_date'] = $order->order_date ?? 'Not specified';
+            $nestedData['order_date'] = $order->order_date ? Carbon::parse($order->order_date)->format('m/d/Y') : 'Not specified';
+            $nestedData['order_time'] = $order->order_date ? Carbon::parse($order->order_date)->format('h:i A') : 'Not specified';
             $nestedData['order_status'] = $order->status->title ?? 'Not specified';
 
-            if($order->order_status_id != 6 ){
-                $nestedData['action'] =  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0" onClick = "cancel_order('.$order->id.')" title="Cancel order"> Cancel</button>';
-                $nestedData['action'] .=  '<button class="btn btn-secondary type="button" onClick = "open_order_modal('.$order->id.')" style="margin-left: 5px;" btn-icon btn-circle btn-sm hov-svg-white mt-2  mt-sm-0"  title="View order"> View</button>';
-            }else{
+            if($order->order_status_id == 6 ){
                 $nestedData['action'] =  '<button class="btn btn-primary btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0"  title="Cancel order"> Cancelled</button>';
             }
+            elseif($order->order_status_id == 5 ){
+                $nestedData['action'] =  '<button class="btn btn-secondary type="button" onClick = "open_order_modal('.$order->id.')" style="margin-left: 5px;" btn-icon btn-circle btn-sm hov-svg-white mt-2  mt-sm-0"  title="View order"> View</button>';
+               
+            }else{
+                $nestedData['action'] =  '<button class="btn btn-secondary type="button" onClick = "open_order_modal('.$order->id.')" style="margin-left: 5px;" btn-icon btn-circle btn-sm hov-svg-white mt-2  mt-sm-0"  title="View order"> View</button>';
+
+                $nestedData['action'] .=  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0" onClick = "cancel_order('.$order->id.')" title="Cancel order"> Cancel</button>';
+                
+            }
+                
+           
             
                         
             $data[] = $nestedData;
@@ -189,11 +222,14 @@ class OrderController extends Controller
     }
 
     public function cancel_order(Request $request){
+
         $return_array = ['status'=>false, 'message'=>''];
         $order_id = $request->input('order_id');
+        // dd($order_id);
 
         if($order_id){
             $order_data = Orders::find($order_id);
+            // dd($order_data);
             $order_status_id = $order_data->order_status_id;
             if($order_status_id != 5){
                 $order_data->order_status_id = 6;
@@ -240,6 +276,69 @@ class OrderController extends Controller
         return response()->json($return_array);
 
     }
+
+    // public function cancel_order(Request $request)
+    // {
+    //     $return_array = ['status' => false, 'message' => ''];
+    //     $order_id = $request->input('order_id');
+
+    //     if (!$order_id) {
+    //         return response()->json(['status' => false, 'message' => 'Order ID is required']);
+    //     }
+
+    //     // Find order, return error if not found
+    //     $order_data = Orders::find($order_id);
+    //     if (!$order_data) {
+    //         // return response()->json(['status' => false, 'message' => 'Order not found']);
+    //         $return_array['message'] = 'Order not found';
+    //     }
+
+    //     // Prevent cancellation if the order is already delivered (status = 5)
+    //     if ($order_data->order_status_id == 5) {
+           
+    //         $return_array['message'] = 'Product delivered and cannot be cancelled';
+
+    //     }
+
+    //     // Update order status to cancelled (status = 6)
+    //     $order_data->order_status_id = 6;
+    //     if (!$order_data->save()) {
+           
+    //         $return_array['message'] = 'Failed to update order status, try again';
+            
+    //     }
+
+    //     // Fetch order details
+    //     $order_details = OrderDetails::where('order_id', $order_id)->get();
+    //     if ($order_details->isEmpty()) {
+            
+    //         $return_array['message'] = 'Order cancelled successfully, but no products found';
+
+    //     }
+
+    //     // Process each product in the order
+    //     foreach ($order_details as $order_detail) {
+    //         $product = Products::find($order_detail->product_id);
+
+    //         // Skip if product not found (prevents error)
+    //         if (!$product) continue;
+
+    //         // Restore stock quantity
+    //         $product->total_quantity += $order_detail->product_quantity;
+    //         $product->sold_quantity = max(0, $product->sold_quantity - $order_detail->product_quantity);
+
+    //         if (!$product->save()) {
+    //             $return_array['message'] = 'Failed to update product stock';
+
+    //         }
+    //     }
+    //     $return_array['status'] = true;
+    //     $return_array['message'] = 'Order cancelled successfully';
+
+    //     // Success response
+    //     return response()->json($return_array);
+    // }
+
 
     public function testMail(){
         $order['id'] = 1;

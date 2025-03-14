@@ -1,5 +1,6 @@
 $(document).ready(function(){
     console.log('create_order');
+    $('#update_order_status_btn').text('Update');
 
     orders_datatable();
 
@@ -18,10 +19,9 @@ $(document).ready(function(){
 });
 
 function update_order_status(){
-    // console.log('update_order_status');
+    $('#update_order_status_btn').text('loading...');
     var order_id = $('#order_no').val();
     var order_status_id = $('#order_status').val();
-    // console.log('order_id',order_id);
 
     $.ajax({
         url: base_url +'/update_order_status',
@@ -31,13 +31,30 @@ function update_order_status(){
         headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
         success : function(response){
             if (response.status) {
-                console.log(response);
+                toastr.options = {
+                    "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                
+                toastr.success(response.message);
                 $("#order_modal").modal("hide");
+                $('#update_order_status_btn').text('Update');
 
                 orders_datatable();
 
             }else{
-                alert(response.message);
+                toastr.options = {
+                    "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                toastr.error(response.message);
+                $('#update_order_status_btn').text('Update');
                 $("#order_modal").modal("hide");
 
             }
@@ -48,6 +65,8 @@ function update_order_status(){
                 console.log('error',error);
                 var response_error = xhr.responseJSON.errors;
                 display_php_error(response_error);
+                $('#update_order_status_btn').text('Update');
+
         }
     });
 
@@ -68,12 +87,28 @@ function open_order_modal(order_id) {
                 let orderDetails = response.data;
 
                 if (orderDetails.length > 0) {
-                    let firstOrder = orderDetails[0]; 
+                    let firstOrder = orderDetails[0];
+
+                    var date = firstOrder.order_date;
+                    var dateTimeParts = date.split(' ');
+                    var order_date = dateTimeParts[0].split('-');
+                    var usFormatedDate = order_date[1] + '/' + order_date[2] + '/' + order_date[0];
+
+                    var order_time = dateTimeParts[1];
+                    var timeParts = order_time.split(':');
+                    var hours = parseInt(timeParts[0],10);
+                    var minutes = timeParts[1];
+                    var seconds = timeParts[2];
+                    var amPm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    var usFormatedTime = hours +':'+ minutes + ' ' + amPm;
+                    // console.log('hours',hours);
 
                     $("#order_no").val(firstOrder.id || "");
                     $("#customer_name").val(firstOrder.customer_name || "");
                     $("#total").val(firstOrder.total_amount || "");
-                    $("#order_date").val(firstOrder.order_date || "");
+                    $("#order_date").val(usFormatedDate || "");
+                    $("#order_time").val(usFormatedTime || "");
                     $("#order_status").val(firstOrder.order_status_id || "");
                     $("#payment_status").val(firstOrder.payment_status || "");
                     $("#payment_type").val(firstOrder.payment_method || "");
@@ -86,6 +121,7 @@ function open_order_modal(order_id) {
                             <td><input type="text" class="form-control" value="${item.product_name}" readonly></td>
                             <td><input type="text" class="form-control" value="${item.product_quantity}" readonly></td>
                             <td><input type="text" class="form-control" value="${item.product_amount}" readonly></td>
+                            <td><input type="text" class="form-control" value="${(item.product_amount * item.product_quantity).toFixed(2)}" readonly></td>
                         </tr>`;
                         $("#product_fields").append(row);
                     });
@@ -191,7 +227,15 @@ $(document).on('click', '.remove-product', function () {
             if (response.success) {
                 productElement.remove(); 
             } else {
-                alert(response.message); 
+                toastr.options = {
+                    "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                toastr.error(response.message);
+                
             }
         }
     });
@@ -224,7 +268,14 @@ function productQtyChange(product_id){
                 });
 
             }else{
-                alert(response.message);
+                toastr.options = {
+                    "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                toastr.error(response.message);
             }
         },
         error : function(xhr,status,error){
@@ -251,7 +302,14 @@ function create_order(){
         headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
         success : function(response){
             if (response.status) {
-               alert(response.message);
+                toastr.options = {
+                    "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                toastr.success(response.message);
                $('#create_order_btn').html('Create+');
 
                window.location.href = response.redirect_url;
@@ -259,7 +317,14 @@ function create_order(){
             }else{
                $('#create_order_btn').html('Create+');
 
-                alert(response.message);
+               toastr.options = {
+                    "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                toastr.error(response.message);
             }
         },
         error : function(xhr,status,error){
@@ -295,20 +360,18 @@ function orders_datatable(){
             {"data" : "total_quantity"},
             {"data" : "total_amount"},
             {"data" : "order_date"},
+            {"data" : "order_time"},
             {"data" : "order_status"},
             {"data" : "action"},
         ]
-        // ,
-        // "order": [[1, 'asc']], // Order by Name column by default
-        // "rowCallback": function (row, data, index) {
-        //     $('td:eq(0)', row).html(index + 1);
-        // }
+       
     });
 }
 
 function cancel_order(order_id){
-    // console.log('cancel_order',order_id);
     if (confirm('Are you sure you want to cancel this order?')) {
+        console.log('cancel_order',order_id);
+
         $.ajax({
             url: base_url +'/cancel_order',
             data : {'order_id':order_id},
@@ -318,9 +381,24 @@ function cancel_order(order_id){
             success : function(response){
                 if (response.status) {
                     orders_datatable();
-    
+                    toastr.options = {
+                        "positionClass": "toast-center", // Custom class for center alignment
+                        "timeOut": "3000", // Auto close after 3 seconds
+                        "extendedTimeOut": "1000",
+                        "closeButton": true,
+                        "progressBar": true
+                    };
+                    toastr.success(response.message);
                 }else{
-                    alert(response.message);
+                    toastr.options = {
+                        "positionClass": "toast-center", // Custom class for center alignment
+                        "timeOut": "3000", // Auto close after 3 seconds
+                        "extendedTimeOut": "1000",
+                        "closeButton": true,
+                        "progressBar": true
+                    };
+                    toastr.error(response.message);
+                    // alert(response.message);
                 }
             },
             error : function(xhr,status,error){
