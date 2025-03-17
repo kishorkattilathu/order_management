@@ -13,6 +13,7 @@ use App\Models\Products;
 use App\Models\ProductStatuses;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Session;
@@ -20,8 +21,16 @@ use Illuminate\Support\Facades\Session;
 class OrderController extends Controller
 {
 
+   
+
+    public function storeCustomerSession(Request $request){
+        $customer_id = $request->input('customer_id');
+        Session::put('customer_id', $customer_id);
+        return response()->json(['status'=> true, 'message'=> 'Customer selected']);
+    }
+
     public function all_orders(Request $request){
-        $request->session()->forget(['products','total_price_sum']);
+        $request->session()->forget(['products','total_price_sum','customer_id','pre_orders']);
         $order_status = OrderStatuses::all();
         return view('order.all_orders',compact('order_status'));
     }
@@ -64,6 +73,9 @@ class OrderController extends Controller
 
     public function create_final_order(Request $request){
         // dd($_POST);
+        $pre_order = $request->input('pre_order');
+        // dd($pre_order);
+
         $return_array = ['status'=>false, 'message'=>''];
         $rules = [
                 'customer_id'        => ['required'], 
@@ -84,15 +96,14 @@ class OrderController extends Controller
             foreach ($products as $index => $product) {
                 $requested_qty = $product_qtys[$index] ?? 0;
             
-                if ($product->total_quantity < $requested_qty) {
-                    // return response()->json([
-                    //     'status' => false,
-                    //     'errors' => "Please book below stock range for product: " . $product->product_name
-                    // ], 422);
-                    // $return_array['message'] =  "Please book below stock range for product: " . $product->product_name;
-                    // $return_array['status'] =  false;
-                return response()->json(['status'=>false,'message'=> "Please book below stock range for product: " . $product->product_name]);
 
+                if($pre_order != 'on'){
+                    // dd($pre_order);
+                    if ($product->total_quantity < $requested_qty) {
+                    
+                        return response()->json(['status'=>false,'message'=> "Please book below stock range for product: " . $product->product_name]);
+    
+                    }
                 }
             }
 
@@ -133,13 +144,26 @@ class OrderController extends Controller
                     $order_detail->order_status_id = 1;
                     $order_detail_saved = $order_detail->save();
 
-                    if($order_detail_saved){
-                        $product_detail = Products::where('id',$product_id)->first();
-                        $product_detail->total_quantity = (int)$product_detail->total_quantity - (int)$product_quantity;
-                        $product_detail->sold_quantity = (int)$product_detail->sold_quantity + (int)$product_quantity;
-                        $product_detail->save();
-                        
+                    if($pre_order != 'on'){
+                        if($order_detail_saved){
+                            $product_detail = Products::where('id',$product_id)->first();
+                            $product_detail->total_quantity = (int)$product_detail->total_quantity - (int)$product_quantity;
+                            $product_detail->sold_quantity = (int)$product_detail->sold_quantity + (int)$product_quantity;
+                            $stock = $product_detail->total_quantity;
+                            if($stock == 0){
+                                $product_detail->product_status_id = 3;
+                            }
+                            $product_detail->save();
+                            
+                        }else{
+                            Log::error('order detail not saved');
+                        }
+                    }else{
+                        $order_type = Orders::find($order_id);
+                        $order_type->order_type = 2;
+                        $order_type->save();
                     }
+                    
                 }
                 Mail::to($customer->email)->queue(new OrderConfirmationMail($order));
                 
@@ -159,7 +183,7 @@ class OrderController extends Controller
 
     public function orders_datatable(Request $request){
 
-        $columns = ['id','total_quantity','total_amount','order_date','order_status_id'];
+        $columns = ['id','order_type','total_quantity','total_amount','order_date','order_status_id'];
 
         $limit = $request->input('length');
         $start = $request->input('start');
@@ -192,10 +216,12 @@ class OrderController extends Controller
         foreach ($orders as $order) 
         {
             $nestedData['id'] = $order->id ?? 'Not specified';
+            // $nestedData['order_type'] = $order->order_type ?? 'Not specified';
+            $nestedData['order_type'] = $order->order_type == 1 ? 'Regular' : 'Pre-Order';
             $nestedData['customer_name'] = $order->customer->first_name ?? 'Not specified';
             $nestedData['customer_email'] = $order->customer->email ?? 'Not specified';
             $nestedData['total_quantity'] = $order->total_quantity ?? 'Not specified';
-            $nestedData['total_amount'] = $order->total_amount ?? 'Not specified';
+            $nestedData['total_amount'] = '₹' .$order->total_amount ?? 'Not specified';
             $nestedData['order_date'] = $order->order_date ? Carbon::parse($order->order_date)->format('m/d/Y') : 'Not specified';
             $nestedData['order_time'] = $order->order_date ? Carbon::parse($order->order_date)->format('h:i A') : 'Not specified';
             $nestedData['order_status'] = $order->status->title ?? 'Not specified';

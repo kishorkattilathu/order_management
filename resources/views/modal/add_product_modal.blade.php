@@ -12,37 +12,41 @@
                 
                     <input type="hidden" name="product_id" id="product_id">
                     <div class="mb-3">
-                        <label for="product_name" class="form-label">Name</label>
+                        <label for="product_name" class="form-label">Name<span class="required">*</span></label>
                         <input type="text" class="form-control" id="product_name" name="product_name" required>
                         <span id="error-product_name" class="text-danger"></span>
                     </div>
                 
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
+                        <label for="description" class="form-label">Description<span class="required">*</span></label>
                         <textarea class="form-control" id="description" name="description"></textarea>
                         <span id="error-description" class="text-danger"></span>
                     </div>
                 
                     <div class="mb-3">
-                        <label for="total_quantity" class="form-label">Total Quantity</label>
+                        <label for="total_quantity" class="form-label">Total Quantity<span class="required">*</span></label>
                         <input type="number" class="form-control" id="total_quantity" name="total_quantity" required>
                         <span id="error-total_quantity" class="text-danger"></span>
                     </div>
                 
                     <div class="mb-3">
-                        <label for="price" class="form-label">Price</label>
+                        <label for="price" class="form-label">Price<span class="required">*</span></label>
                         <input type="number" step="0.01" class="form-control" id="price" name="price" required>
                         <span id="error-price" class="text-danger"></span>
                     </div>
                 
-                    <div class="mb-3">
-                        <label for="product_status_id" class="form-label">Product Status</label>
+                    <div class="mb-3" id="product_status_id_div">
+                        <label for="product_status_id" class="form-label">Product Status<span class="required">*</span></label>
                         <select class="form-control" name="product_status_id" id="product_status_id" required>
+                            <option value="1" selected>Active</option>
+                            <option value="2">Inactive</option>
+                        </select>
+                        {{-- <select class="form-control" name="product_status_id" id="product_status_id" required>
                             <option value="">Select Status</option>
                             @foreach ($products_statuses as $product_status)
                                 <option value="{{$product_status->id}}">{{$product_status->title}}</option>
                             @endforeach
-                        </select>
+                        </select> --}}
                     </div>
                 
                     <div class="mb-3">
@@ -56,14 +60,21 @@
                         <span id="error-category_id" class="text-danger"></span>
 
                     </div>
-                    <div id="div_old_image">
+                    {{-- <div id="div_old_image">
                         <img src="" id="old_image" style="width:100px" alt="Old Image">
-                    </div>
+                    </div> --}}
                 
-                    <div class="mb-3">
+                    {{-- <div class="mb-3">
                         <label for="image_url" class="form-label">Upload Image</label>
                         <input type="file" class="form-control" id="image_url" name="image_url" required accept="image/*">
                         <img id="imagePreview" alt="Image Preview" width="150" style="display: none;">
+                        <span id="error-image_url" class="text-danger"></span>
+                    </div> --}}
+
+                    <div class="mb-3">
+                        <label for="image_url" class="form-label">Upload Image</label>
+                        <input type="file" class="form-control" id="image_url" name="image_url" required accept="image/*">
+                        <img id="imagePreview" src="images/categories/default.png" alt="Image Preview" width="150" style="display: none;">
                         <span id="error-image_url" class="text-danger"></span>
                     </div>
                 

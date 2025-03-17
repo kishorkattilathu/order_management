@@ -1,5 +1,9 @@
 $(document).ready(function(){
-
+    $('#pre_order_checkbox').on('change', function(){ 
+        products_datatable();
+        $('.order-item').remove();
+        $('#grand_total').text('₹ 00.00');
+    });
     $('#save_product_btn').html('Save');
 
     console.log('products js');
@@ -21,19 +25,32 @@ $(document).ready(function(){
         products_datatable();
     });
 
+    
 
-    $('#image_url').change(function (event) {
-        let file = event.target.files[0];
-        if (file) {
-            let reader = new FileReader();
-            reader.onload = function (e) {
-                $('#imagePreview').attr('src', e.target.result).show(); 
-            };
-            reader.readAsDataURL(file);
-        }else{
-            resetPreview();
-        }
+    // $('#image_url').change(function (event) {
+    //     let file = event.target.files[0];
+    //     if (file) {
+    //         let reader = new FileReader();
+    //         reader.onload = function (e) {
+    //             $('#imagePreview').attr('src', e.target.result).show(); 
+    //         };
+    //         reader.readAsDataURL(file);
+    //     }else{
+    //         resetPreview();
+    //     }
         
+    // });
+    document.getElementById('image_url').addEventListener('change', function(event) {
+        var file = event.target.files[0]; 
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var preview = document.getElementById('imagePreview');
+                preview.src = e.target.result; 
+                preview.style.display = 'block'; 
+            };
+            reader.readAsDataURL(file); 
+        }
     });
 
     // console.log("Edit button found:", $(".edit_btn").length);
@@ -46,10 +63,18 @@ $(document).ready(function(){
 
 function products_datatable()
 {
+    if($('#pre_order_checkbox').is(':checked')) {
+                var pre_order_check = 1;
+                // alert('checked');
+        }else{
+           var pre_order_check = 0;
+        //    alert('not checked');
+        }
+
     var currentUrl = window.location.href;
-    console.log('currentUrl:', currentUrl);
-    console.log("Edit button found:", $(".edit_btn").length);
-    console.log("Delete button found:", $(".delete_btn").length);
+    // console.log('currentUrl:', currentUrl);
+    // console.log("Edit button found:", $(".edit_btn").length);
+    // console.log("Delete button found:", $(".delete_btn").length);
     // Check if the URL contains 'create_orders'
     if (currentUrl.includes("create_orders")) {
        var path = currentUrl;
@@ -57,7 +82,7 @@ function products_datatable()
     var category_id = $('#categories').val();
     var product_status_id = $('#product_status').val();
     
-    console.log(product_status_id);
+    // console.log(product_status_id);
     if ($.fn.DataTable.isDataTable('#products_datatable')){ 
         $('#products_datatable').DataTable().destroy(); 
     }
@@ -66,7 +91,7 @@ function products_datatable()
         "processing" : true,
         "serverSide" : true,
         "ajax" : {
-            "data": {'product_status_id':product_status_id, 'category_id':category_id,'path':path},
+            "data": {'product_status_id':product_status_id, 'category_id':category_id,'path':path,'pre_order_check':pre_order_check},
             "url" : base_url + '/products_datatable',
             "type" : "POST",
             "dataType" : "JSON",
@@ -151,6 +176,7 @@ function open_add_product_modal(){
 
     resetPreview();
     $('#imageUpload').val('');
+    $('#image_url').val('');
 
     var input_id = ['product_name','description','total_quantity','price','product_status_id','category_id','image_url'];
     remove_php_error(input_id);
@@ -160,7 +186,9 @@ function open_add_product_modal(){
     $('#description').val('');
     $('#total_quantity').val('');
     $('#price').val('');
-    $('#product_status_id').val('');
+    // $('#product_status_id').val('');
+    
+    
     $('#category_id').val('');
     $('#image_url').val('');
     $('#imagePreview').hide('');
@@ -176,6 +204,8 @@ function resetPreview() {
 
 function open_edit_product_modal(product_id){
     // console.log('open_edit_product_modal',product_id);
+    $('#image_url').val('');
+    resetPreview();
     var input_id = ['product_name','description','total_quantity','price','product_status_id','category_id','image_url'];
     remove_php_error(input_id);
     $('#product_id').val(product_id);
@@ -192,16 +222,29 @@ function open_edit_product_modal(product_id){
                 if (response.status) {
                     var product = response.products_detail;
                     console.log('product.image_url',product.image_url);
-                    $('#div_old_image').show();
+                    // $('#div_old_image').show();
                     
                     $('#product_name').val(product.product_name);
                     $('#description').val(product.description);
                     $('#total_quantity').val(product.total_quantity);
                     $('#price').val(product.price);
+                    console.log(response.option_html);
+
+                    $('#product_status_id').html(response.option_html);
                     $('#product_status_id').val(product.product_status_id).trigger('change');
                     $('#category_id').val(product.category_id).trigger('change');
-                    $('#old_image').attr('src',product.image_url ? 'images/categories/'+product.image_url:'images/categories/default.png');
+                    // $('#old_image').attr('src',product.image_url ? 'images/categories/'+product.image_url:'images/categories/default.png');
+                    // if (product.image_url) {
+                    //     $('#imagePreview').attr('src', 'images/categories/' + product.image_url).show();
+                    // } else {
+                    //     $('#imagePreview').hide();
+                    // }
 
+                    if (product.image_url) {
+                        $('#imagePreview').attr('src', 'images/categories/' + product.image_url).show();
+                    } else {
+                        $('#imagePreview').attr('src', 'images/categories/default.png').show();
+                    }
                     $('#menu_label').html('Update Products');
                     $('#add_product_modal').modal('show');
                 }else{

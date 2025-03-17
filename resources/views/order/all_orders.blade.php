@@ -14,6 +14,7 @@
             <thead class="text-gray fs-12">
                 <tr>
                     <th class="pl-0">Id</th>
+                    <th class="pl-0">Type</th>
                     <th data-breakpoints="md">Name</th>
                     <th data-breakpoints="md">Email</th>
                     <th data-breakpoints="md">Quantity</th>

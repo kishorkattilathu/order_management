@@ -23,7 +23,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
-                <h2>Product Details</h2>
+                <h4>Product Details</h4>
             </div>
             <div class="col-md-7">
                 <div class="card">
@@ -58,12 +58,21 @@
                             <div class="py-4">
                                 <div class="row g-3 align-items-end">
                                     <div class="col-md-6">
-                                        <select name="customer_id" id="customer_id" class="form-select">
+                                        {{-- <select name="customer_id" id="customer_id" class="form-select">
                                             <option value="">Select Customer</option>
                                             @foreach ($customers as $customer)
                                                 <option value="{{$customer->id}}">{{$customer->first_name}}</option>
                                             @endforeach
+                                        </select> --}}
+                                        <select name="customer_id" id="customer_id" class="form-select">
+                                            <option value="">Select Customer</option>
+                                            @foreach ($customers as $customer)
+                                                <option value="{{$customer->id}}"
+                                                    {{session('customer_id') == $customer->id ? 'selected' : ''}}>
+                                                    {{$customer->first_name}}</option>
+                                            @endforeach
                                         </select>
+                                        
                                         <span class="text-danger" id="error-customer_id"></span>
                                     </div>
                                     <div class="col-md-6">
@@ -76,6 +85,11 @@
                                             @endforeach
                                         </select> --}}
                                         {{-- <span class="text-danger" id="error-product_ids"></span> --}}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="pre_order_checkbox" name="pre_order"{{ session('pre_orders') == 1 ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="pre_order_checkbox">Pre Orders</label>
+                                        </div>
+                                        {{-- <button class="btn btn-primary" id="pre_order_button" type="button">Pre Orders</button> --}}
                                     </div>
                                     {{-- <div class="col-md-4 d-grid">
                                         <button type="button" class="btn btn-primary" id="add_order_btn">Add Product+</button>
@@ -144,7 +158,7 @@
                                             </div>
                                            
                                             <div  class="col-md-2">
-                                                <div>&#8377; 00:00</div>
+                                                <div>&#8377; 00.00</div>
                                             </div>
                                             <div class="col-md-2">
                                             </div>
@@ -162,7 +176,7 @@
                                             </div>
                                            
                                             <div  class="col-md-2">
-                                                <div>&#8377; 00:00</div>
+                                                <div>&#8377; 00.00</div>
 
                                             </div>
                                             <div class="col-md-2">
@@ -182,7 +196,7 @@
                                            
                                             <div  class="col-md-2">
                                                 {{-- <div id="grand_total">&#8377; {{$total}}</div> --}}
-                                                <div id="grand_total">&#8377; {{isset($grand_total_price) ? $grand_total_price : 00}}</div>
+                                                <div id="grand_total">&#8377; {{isset($grand_total_price) ? number_format($grand_total_price,2,'.','') : 00.00}}</div>
                                             </div>
                                             <div class="col-md-2">
                                             </div>

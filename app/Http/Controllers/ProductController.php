@@ -15,8 +15,8 @@ class ProductController extends Controller
 {
     public function products(){
         $categories = Categories::all();
-        $products_statuses = ProductStatuses::all();
-        // dd($categories);
+        $products_statuses = ProductStatuses::whereIn('id', [1, 2])->get();
+        // dd($categories);'
         return view('products.all_products',compact('categories','products_statuses'));
     }
 
@@ -50,10 +50,10 @@ class ProductController extends Controller
         $rules = [
             'product_name' => 'required|string|max:255',
             'description' => 'required|string|max:255',
-            'total_quantity' => 'required|integer|min:1',
+            'total_quantity' => 'required|integer',
             'price' => 'required|numeric|min:1',
             'product_status_id' => 'required|integer',
-            'category_id' => 'required|integer',
+            // 'category_id' => 'integer',
             'image_url' => 'nullable|mimes:jpg,png,jpeg|max:2048', 
         ];
         
@@ -96,7 +96,12 @@ class ProductController extends Controller
                 }
                 $product_saved = $product_data->save();
                 if($product_saved){
-                    
+                    $stock = $product_data->total_quantity;
+                    // dd($stock);
+                    if($stock == '0'){
+                        $product_data->product_status_id = 3;
+                        $product_data->save();
+                    }
                     $return_array['status'] = true;
                     $return_array['message'] = "Product Saved Successfully";
                     
@@ -148,15 +153,23 @@ class ProductController extends Controller
     }
 
     public function get_product_detail_by_id(Request $request){
-        
+        // dd($_POST);
         $return_array = ['status'=>false, 'message'=>''];
 
         $product_id = $request->input('product_id');
         $products_detail = Products::where('id',$product_id)->first();
-           
+        $html="";
+        $products_statuses = ProductStatuses::all();
+        foreach ($products_statuses as $product_status){
+            $html.='<option value="'.$product_status->id.'">'.$product_status->title.'</option>';
+        }
+
         if($products_detail){
             $return_array['status'] = true;
             $return_array['products_detail'] = $products_detail;
+            $return_array['option_html'] = $html;
+            
+
         }else{
             $return_array['message'] = 'Product not found';
         }
@@ -194,23 +207,7 @@ class ProductController extends Controller
             'success' => true,
         ]);
     }
-    // public function removeProductFromSession(Request $request){
-    //     $product_id = $request->input('product_id');
-    //     $stored_products = session('products', []); 
-        
-       
-
-
-    //     $stored_products = array_filter($stored_products, function ($product) use ($product_id) {
-    //         return $product['product_id'] != $product_id; 
-    //     });
-
-    //     session()->put('products', array_values($stored_products)); 
-
-    //     return response()->json([
-    //         'success' => true,
-    //     ]);
-    // }
+   
 
     public function update_quantity_in_session(Request $request){
 
@@ -220,13 +217,20 @@ class ProductController extends Controller
         $products = Products::find($product_id);
         $check_stock = $products->total_quantity;
         if($check_stock < $product_qty){
-           return response()->json(['status'=>false, 'message'=> "oops stock is only.$check_stock."]); 
+            // dd($request->session()->get('pre_orders'));
+            if($request->session()->get('pre_orders') != 1){
+                 
+                return response()->json(['status'=>false, 'message'=> "oops stock is only.$check_stock."]); 
+
+            }
+
+            
         }
         $new_price = $request->input('product_total_amount');
         $sessionProducts  = session('products',[]);
         foreach($sessionProducts as $key=>$product){
             if($product['product_id'] == $product_id){
-                $sessionProducts[$key]['total_price'] = $new_price;
+                $sessionProducts[$key]['total_price'] =number_format($new_price,2, '.', '') ;
                 $sessionProducts[$key]['qty'] = $product_qty;
             }
         }
@@ -235,7 +239,7 @@ class ProductController extends Controller
         $total_price_sum = array_sum(array_column($stored_products, 'total_price'));
         session()->put('total_price_sum', $total_price_sum);
         $get_total_price_sum = session()->get('total_price_sum');
-
+        // dd($get_total_price_sum);
         return response()->json(['status' => true, 'message'=> 'session updated','product_data' => $stored_products,'total_price_sum'=>$get_total_price_sum]);
     }
 
@@ -245,6 +249,14 @@ class ProductController extends Controller
         // dd($_POST);
         // dd();
         
+        $pre_orders = $request->input('pre_order_check');
+        if($pre_orders == 1){
+            $request->session()->forget(['products','total_price_sum','pre_orders']);
+            session()->put('pre_orders',$pre_orders);
+        }else{
+            $request->session()->forget(['products','total_price_sum','pre_orders']);
+        }
+        // dd($pre_orders);
         $columns = ['id','product_name','category_id','total_quantity','sold_quantity','price','product_status_id','image_url'];
 
         $limit = $request->input('length');
@@ -294,10 +306,10 @@ class ProductController extends Controller
             $nestedData['product_name'] = $product->product_name ?? 'Not specified';
             $nestedData['total_quantity'] = $product->total_quantity ?? 'Not specified';
             $nestedData['sold_quantity'] = $product->sold_quantity ?? 'Not specified';
-            $nestedData['price'] = $product->price ?? 'Not specified';
+            $nestedData['price'] = isset($product->price) ? '&#8377;'. $product->price :'Not specified';
             $nestedData['product_status_id'] = $product->status->title ?? 'Not specified';
             $nestedData['category_name'] = $product->category->name ?? 'None';
-            $nestedData['image_url'] =  $product->image_url ?'<img src="'.asset('images/categories/'.$product->image_url).'" class="w-50">' : '<img src="'.asset('images/categories/default.png').'" class="w-50">';
+            $nestedData['image_url'] =  $product->image_url ?'<img src="'.asset('images/categories/'.$product->image_url).'" class="img-fluid rounded shadow" style="width: 150px; height: auto;">' : '<img src="'.asset('images/categories/default.png').'" class="img-fluid rounded shadow" style="width: 150px; height: auto;">';
             if(!$request->input('path')){
                 
 
@@ -307,7 +319,19 @@ class ProductController extends Controller
                 </button>';
             }else{
 
-                if($product->product_status_id == 1){
+                if($pre_orders == 0){
+                        if($product->product_status_id == 1){
+                            $nestedData['action'] = '<button 
+                            class="btn btn-sm  btn-primary add_order_btn" 
+                            data-name="' . $product->product_name . '" 
+                            data-id="' . $product->id . '">
+                            <i class="bi bi-plus"></i>
+                        </button>';
+                    }else{
+                        $nestedData['action'] = '<a href="javascript:void(0);"> </a>';
+                    }
+                }else{
+                    if($product->product_status_id == 3){
                         $nestedData['action'] = '<button 
                         class="btn btn-sm  btn-primary add_order_btn" 
                         data-name="' . $product->product_name . '" 
@@ -317,6 +341,9 @@ class ProductController extends Controller
                 }else{
                     $nestedData['action'] = '<a href="javascript:void(0);"> </a>';
                 }
+                }
+
+                
                 
             }
             

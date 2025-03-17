@@ -67,6 +67,10 @@
                             <label for="payment_type" class="form-label">Payment Type</label>
                             <input type="text" class="form-control" id="payment_type" name="payment_type" readonly>
                         </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="order_type" class="form-label">Order Type</label>
+                            <input type="text" class="form-control" id="order_type" name="order_type" readonly>
+                        </div>
                     </div>
                 </form>
             </div>

@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/cancel_order', [OrderController::class, 'cancel_order'])->name('cancel_order');
     Route::post('/get_order_detail_by_id', [OrderController::class, 'get_order_detail_by_id'])->name('get_order_detail_by_id');
     Route::post('/update_order_status', [OrderController::class, 'update_order_status'])->name('update_order_status');
+    Route::post('/storeCustomerSession', [OrderController::class, 'storeCustomerSession'])->name('storeCustomerSession');
     
     
     Route::get('/dumpsession', [ProductController::class, 'dumpsession'])->name('dumpsession');

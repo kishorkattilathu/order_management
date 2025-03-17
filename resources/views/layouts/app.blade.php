@@ -31,6 +31,11 @@
         
 
         <style>
+
+            .required {
+                color: red;
+                font-weight: bold;
+            }
             .toast-center {
                 top: 50%;
                 left: 50%;

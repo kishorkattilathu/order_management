@@ -4,9 +4,6 @@ $(document).ready(function(){
 
     orders_datatable();
 
-    // $('.add_order_btn').on('click',function(){
-    //     add_product_list();
-    // });
     $('#create_order_btn').on('click',function(){
         create_order();
     });
@@ -18,9 +15,65 @@ $(document).ready(function(){
 
     $('#customer_id').on('change',function(){
         $('#search').val('');
+
+        var customerId = $(this).val();
+        storeCustomerSession(customerId);
+        
     });
+    
+    // $('#pre_order_checkbox').on('click',function(){
+    //     pre_orders();
+    // });
 
 });
+
+
+
+
+function storeCustomerSession(customerId){
+    console.log('customerId',customerId);
+
+    $.ajax({
+        url: base_url +'/storeCustomerSession',
+        data : {'customer_id':customerId},
+        type : 'POST',
+        dataType : 'JSON',
+        headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+        success : function(response){
+            if (response.status) {
+                toastr.options = {
+                    // "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                
+                toastr.success(response.message);
+
+            }else{
+                toastr.options = {
+                    // "positionClass": "toast-center",
+                    "timeOut": "3000",
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                toastr.error(response.message);
+
+            }
+        },
+        error : function(xhr,status,error){
+                console.log('xhr',xhr);
+                console.log('status',status);
+                console.log('error',error);
+                var response_error = xhr.responseJSON.errors;
+                display_php_error(response_error);
+
+        }
+    });
+
+}
 
 $(document).on('click', '.add_order_btn', function() {
     var product_id = $(this).data('id');
@@ -118,6 +171,7 @@ function open_order_modal(order_id) {
                     // console.log('hours',hours);
 
                     $("#order_no").val(firstOrder.id || "");
+                    $("#order_type").val( firstOrder.order_type == 1 ? 'Regular' : 'Pre-Order' || "");
                     $("#customer_name").val(firstOrder.customer_name || "");
                     $("#total").val(firstOrder.total_amount || "");
                     $("#order_date").val(usFormatedDate || "");
@@ -134,7 +188,7 @@ function open_order_modal(order_id) {
                             <td><input type="text" class="form-control" value="${item.product_name}" readonly></td>
                             <td><input type="text" class="form-control" value="${item.product_quantity}" readonly></td>
                             <td><input type="text" class="form-control" value="${item.product_amount}" readonly></td>
-                            <td><input type="text" class="form-control" value="${(item.product_amount * item.product_quantity).toFixed(2)}" readonly></td>
+                            <td><input type="text" class="form-control" value="${(item.product_amount * item.product_quantity)}" readonly></td>
                         </tr>`;
                         $("#product_fields").append(row);
                     });
@@ -154,17 +208,12 @@ function open_order_modal(order_id) {
 
 
 function add_product_list(product_id, product_text){
-    // console.log('add_product_list');
     
     $('#grand_total_div').show();
     var customer_id = $('#customer_id').val();
 
-    // console.log('add_product_list'); 
-    // console.log('customer_id',customer_id); 
-    // console.log('product_id',product_id);
-    // console.log('product_text',product_text);
+   
     if (customer_id === "" || product_id === "") {
-        // alert("Please select a customer first");
         toastr.options = {
             "positionClass": "toast-center", // Custom class for center alignment
             "timeOut": "3000", // Auto close after 3 seconds
@@ -304,13 +353,16 @@ function productQtyChange(product_id){
 
                 var product_data = response.product_data;
                 var total_price_sum = response.total_price_sum;
-                $('#grand_total').html('&#8377;' + total_price_sum);
+                // $('#grand_total').html('&#8377;' + total_price_sum );
+                $('#grand_total').html('&#8377; ' + parseFloat(total_price_sum).toFixed(2));
+
 
                 console.log(product_data);
                 $.each(product_data,function(index, item){
                     console.log(item)
                     $('#product_amount-'+item.product_id).text(item.total_price);
                 });
+                // location.reload();
 
             }else{
                 toastr.options = {
@@ -404,6 +456,7 @@ function orders_datatable(){
         },
         "columns" : [
             {"data" : "id"},
+            {"data" : "order_type"},
             {"data" : "customer_name"},
             {"data" : "customer_email"},
             {"data" : "total_quantity"},
@@ -412,7 +465,7 @@ function orders_datatable(){
             {"data" : "order_time"},
             {"data" : "order_status"},
             {"data" : "action"},
-        ]
+        ],
        
     });
 }
