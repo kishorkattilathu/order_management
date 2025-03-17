@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Mail\OrderConfirmationMail;
+use App\Models\Categories;
 use App\Models\Customers;
 use App\Models\OrderDetails;
 use App\Models\Orders;
 use App\Models\OrderStatuses;
 use App\Models\Products;
+use App\Models\ProductStatuses;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -37,20 +39,31 @@ class OrderController extends Controller
     public function create_orders(Request $request){
        
         $session = $request->session()->get('products');
+        $total_price_sum = $request->session()->get('total_price_sum');
+        // dd($total_price_sum );
         if (!empty($session)) {
            
             $product_in_session = $session; 
+            // $grand_total_price = isset($total_price_sum)?? ''; 
+            // $grand_total_price = isset($total_price_sum) ? $total_price_sum : ''; 
+            // $grand_total_price = $total_price_sum ?? ''; 
+            $grand_total_price = $total_price_sum ?? 0; 
+
         } else {
             $product_in_session = collect();
+            $grand_total_price = $total_price_sum ?? 0; 
+
         }
+        $categories = Categories::all();
+        $products_statuses = ProductStatuses::all();
 
         $customers = Customers::where('account_status','active')->get();
         $products = Products::where([['total_quantity','>', 0],['product_status_id',1]])->get();
-        return view('order.create_orders',compact('customers','products','product_in_session'));
+        return view('order.create_orders',compact('customers','products','categories','products_statuses','product_in_session','grand_total_price'));
     }
 
     public function create_final_order(Request $request){
-        
+        // dd($_POST);
         $return_array = ['status'=>false, 'message'=>''];
         $rules = [
                 'customer_id'        => ['required'], 
@@ -61,41 +74,39 @@ class OrderController extends Controller
              return response()->json(['status'=>false,'errors'=>$validator->errors()],422);
         }else{
 
+            $customer_id = $request->input('customer_id')?? '';
             
-             $customer_id = $request->input('customer_id')?? '';
-            //  $product_ids = $request->input('product_ids')?? '';
-            //  $product_prices = $request->input('product_price')?? '';
-            //  $product_qtys = $request->input('product_qty')?? '';
-            // //  if(empty($product_ids||$product_prices||$product_qtys)){
-            // //     return response()->json(['status'=>false,'message'=>'Please add product first']);
-            // //  }
-
-            // if (empty($product_ids) || empty($product_prices) || empty($product_qtys)) {
-            //     return response()->json(['status' => false, 'message' => 'Please add product first']);
-            // }
             $product_ids = $request->input('product_ids', []);
             $product_prices = $request->input('product_price', []);
             $product_qtys = $request->input('product_qty', []);
-            // dd($product_ids);
-            // dd($product_prices);
-            // dd($product_qtys);
-            // if (!is_array($product_ids) || !is_array($product_prices) || !is_array($product_qtys)) {
-            //     return response()->json(['status' => false, 'message' => 'Invalid product data']);
-            // }
-             
+            
+            $products = Products::find($product_ids);
+            foreach ($products as $index => $product) {
+                $requested_qty = $product_qtys[$index] ?? 0;
+            
+                if ($product->total_quantity < $requested_qty) {
+                    // return response()->json([
+                    //     'status' => false,
+                    //     'errors' => "Please book below stock range for product: " . $product->product_name
+                    // ], 422);
+                    // $return_array['message'] =  "Please book below stock range for product: " . $product->product_name;
+                    // $return_array['status'] =  false;
+                return response()->json(['status'=>false,'message'=> "Please book below stock range for product: " . $product->product_name]);
+
+                }
+            }
+
+
              $data = [
                 $product_prices,$product_qtys
              ];
-            //  dd($data);
              $total_price = [];
 
              foreach ($product_prices as $key => $price) {
                  $total_price[$key] = $price * $product_qtys[$key];
-                //  dd($total_price[$key]);
              }
             
             $customer = Customers::where('id',$customer_id)->first();
-            //  dd($customer);
             $order = new Orders();
             $order->customer_id = $customer_id;
             $order->total_quantity = array_sum($product_qtys);
@@ -108,14 +119,10 @@ class OrderController extends Controller
             if($order_id){
                 foreach ($product_ids as $key => $product_id) 
                 {
-                    // dd($product_id);
                     $product_amount =  $product_prices[$key];
-                    // dd($product_amount);
 
                     $product_quantity =  $product_qtys[$key];
                     $product_total_amount = (float)$product_amount * (int)$product_quantity;
-                    // dd($product_total_amount);
-
 
                     $order_detail = new OrderDetails();
                     $order_detail->order_id = $order_id;

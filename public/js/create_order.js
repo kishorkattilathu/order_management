@@ -4,9 +4,9 @@ $(document).ready(function(){
 
     orders_datatable();
 
-    $('#add_order_btn').on('click',function(){
-        add_order_list();
-    });
+    // $('.add_order_btn').on('click',function(){
+    //     add_product_list();
+    // });
     $('#create_order_btn').on('click',function(){
         create_order();
     });
@@ -16,7 +16,20 @@ $(document).ready(function(){
     var input_array = ['customer_id','product_ids'];
     remove_php_error(input_array);
 
+    $('#customer_id').on('change',function(){
+        $('#search').val('');
+    });
+
 });
+
+$(document).on('click', '.add_order_btn', function() {
+    var product_id = $(this).data('id');
+    
+    var product_text = $(this).data('name');
+        add_product_list(product_id, product_text);
+
+});
+
 
 function update_order_status(){
     $('#update_order_status_btn').text('loading...');
@@ -140,17 +153,31 @@ function open_order_modal(order_id) {
 
 
 
-function add_order_list(){
+function add_product_list(product_id, product_text){
+    // console.log('add_product_list');
+    
     $('#grand_total_div').show();
+    var customer_id = $('#customer_id').val();
 
-    console.log('add_order_list'); 
+    // console.log('add_product_list'); 
+    // console.log('customer_id',customer_id); 
+    // console.log('product_id',product_id);
+    // console.log('product_text',product_text);
     if (customer_id === "" || product_id === "") {
-        alert("Please select both a customer and a product.");
+        // alert("Please select a customer first");
+        toastr.options = {
+            "positionClass": "toast-center", // Custom class for center alignment
+            "timeOut": "3000", // Auto close after 3 seconds
+            "extendedTimeOut": "1000",
+            "closeButton": true,
+            "progressBar": true
+        };
+        toastr.error("Please select a customer first");
         return;
     }
 
-    var product_id = $('#product_id').val();
-    var product_text = $('#product_id option:selected').text();
+    // var product_id = $('#product_id').val();
+    // var product_text = $('#product_id option:selected').text();
 
     $.ajax({
         url: base_url +'/get_product_detail',
@@ -163,6 +190,7 @@ function add_order_list(){
                 // console.log('stored_products',response.stored_products);
                 var total_price_sum = response.total_price_sum;
                 var product_detail = response.products_detail;
+                var stock_quantity = response.stock_quantity;
                 
                 var newRow = `
                     <div class="row g-3 align-items-end order-item">
@@ -171,30 +199,44 @@ function add_order_list(){
                             <input id="product_price-${product_id}" type="hidden" name="product_price[]" value="${product_detail.price}">
                             <p class="">${product_text}</p>
                         </div>
+                        <div class="col-md-2">
+                        <input id="product_stock-${product_id}" type="text" readonly name="product_stocks[]" value="${stock_quantity !== null ? stock_quantity : product_detail.total_quantity}" class="form-control product_stock">
+                           
+                        </div>
                         <div class="col-md-3">
                             <input  type="number" onChange="productQtyChange(${product_id})" name="product_qty[]" data-product_id="${product_id}" id="product_qty-${product_id}" value="1" min="1" class="form-control product_qty">
 
                         </div>
 
-                        <div class="col-md-3">
-                            <div id="product_amount-${product_id}"> </div>
+                        <div class="col-md-2">
+                            <div id="product_amount-${product_id}">${product_detail.price} </div>
 
                         </div>
 
-
-                    
-                        <div class="col-md-3 d-grid">
-                            <button type="button" class="btn btn-danger remove-product">Remove</button>
+                        <div class="col-md-2 d-grid">
+                            <i class="bi bi-trash remove-product text-danger"></i>
                         </div>
                     </div>
                 `;
 
                 $('#order_list').append(newRow);
                 $('#grand_total').html('&#8377;' + total_price_sum);
-
+                $('#stock_quantity').html( stock_quantity);
+                $('#search').val('');
                 productQtyChange(product_id);
             }else{
-                alert(response.message);
+
+                toastr.options = {
+                    "positionClass": "toast-center", // Custom class for center alignment
+                    "timeOut": "3000", // Auto close after 3 seconds
+                    "extendedTimeOut": "1000",
+                    "closeButton": true,
+                    "progressBar": true
+                };
+                toastr.error(response.message);
+                $('#search').val('');
+
+                // alert(response.message);
             }
         },
         error : function(xhr,status,error){
@@ -216,7 +258,7 @@ $(document).on('click', '.remove-product', function () {
     var productElement = $(this).closest('.order-item'); 
     // var product_id = productElement.data('product-id');
     var product_id = productElement.find('.product-id').val();
-    console.log(product_id,'product_id');
+    // console.log(product_id,'product_id');
 
     $.ajax({
         url : base_url +'/removeProductFromSession',
@@ -226,6 +268,9 @@ $(document).on('click', '.remove-product', function () {
         success: function (response) {
             if (response.success) {
                 productElement.remove(); 
+                // location.reload();
+                productQtyChange(product_id);
+
             } else {
                 toastr.options = {
                     "positionClass": "toast-center",
@@ -302,6 +347,8 @@ function create_order(){
         headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
         success : function(response){
             if (response.status) {
+                console.log(response.message);
+                console.log(response.status);
                 toastr.options = {
                     "positionClass": "toast-center",
                     "timeOut": "3000",
@@ -315,6 +362,8 @@ function create_order(){
                window.location.href = response.redirect_url;
 
             }else{
+                console.log(response.message);
+
                $('#create_order_btn').html('Create+');
 
                toastr.options = {
@@ -407,6 +456,15 @@ function cancel_order(order_id){
                     console.log('error',error);
                     var response_error = xhr.responseJSON.errors;
                     display_php_error(response_error);
+                    alert(response_error);
+                    // toastr.options = {
+                    //     "positionClass": "toast-center", // Custom class for center alignment
+                    //     "timeOut": "3000", // Auto close after 3 seconds
+                    //     "extendedTimeOut": "1000",
+                    //     "closeButton": true,
+                    //     "progressBar": true
+                    // };
+                    // toastr.error(xhr.responseJSON.errors);
             }
         });
     }
@@ -424,3 +482,52 @@ function remove_php_error(input_array){
         $('#error-'+input_id ).html('');
     });
 }
+
+$(document).ready(function() {
+    // $('#search').on('focus',function(){
+    //     let resultHtml = '<div class="result-item add-new form-control p-2" style="max-height: 200px; overflow-y: auto;">Add new +</div>';
+    //     $('#result').html(resultHtml);
+    // });
+    $('#search').on('keyup', function() {
+        var query = $(this).val();
+        if (query.length > 0) {
+            $.ajax({
+                url: base_url +'/search',
+                type: "GET",
+                data: { query: query },
+                success: function(data) {
+                    let resultHtml = '<div class="result-item add-new form-control p-2" style="max-height: 200px; overflow-y: auto;">Add new +</div>';
+                    data.forEach(product => {
+                        resultHtml += `<a href="javascript:void(0);" class="add_order_btn" data-name ="${product.product_name}" data-id="${product.id}">
+                                <div class="result-item">${product.product_name}</div>
+                            </a>`;
+                    });
+                    $('#result').html(resultHtml);
+                }
+            });
+        } else {
+           // $('#result').html(resultHtml);
+        }
+    });
+
+    $(document).on('click', '.result-item', function() {
+        $('#search').val($(this).text());
+        $('#result').html('');
+    });
+
+    $(document).on('click', '.add-new', function() {
+        $('#product_modal').modal('show');
+    });
+});
+
+// $(document).ready(function () {
+//     var currentUrl = window.location.href;
+//     console.log('currentUrl:', currentUrl);
+//     console.log("Edit button found:", $(".edit_btn").length);
+//     console.log("Delete button found:", $(".delete_btn").length);
+//     // Check if the URL contains 'create_orders'
+//     if (currentUrl.includes("create_orders")) {
+//         $(".edit_btn").hide(); 
+//         $(".delete_btn").hide(); 
+//     }
+// });

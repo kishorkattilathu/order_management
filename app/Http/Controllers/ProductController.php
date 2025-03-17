@@ -8,6 +8,7 @@ use App\Models\Products;
 use App\Models\ProductStatuses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -109,26 +110,33 @@ class ProductController extends Controller
     
 
     public function get_product_detail(Request $request){
-        
+        // dd($_POST);
         $return_array = ['status'=>false, 'message'=>''];
 
         $product_id = $request->input('product_id');
 
         $stored_products = session()->get('products', []);
+        // dd($stored_products);
         $stored_product_ids = array_column($stored_products,'product_id');
+        // dd($stored_product_ids);
+
         if(!in_array($product_id, $stored_product_ids)){
             
             $products_detail = Products::where('id',$product_id)->first();
-            $stored_products[] =['product_id'=> $product_id,'qty'=> 1,'price' =>$products_detail->price,'name'=>$products_detail->product_name, 'total_price'=>$products_detail->price];
+            // $stored_products[] =['product_id'=> $product_id,'qty'=> 1,'price' =>$products_detail->price,'name'=>$products_detail->product_name, 'total_price'=>$products_detail->price,'stock_quantity'=>$products_detail->total_quantity];
+            $stored_products[] =['product_id'=> $product_id,'qty'=> 1,'price' =>number_format($products_detail->price, 2, '.', ''),'name'=>$products_detail->product_name, 'total_price'=>number_format($products_detail->price, 2, '.', ''),'stock_quantity'=>$products_detail->total_quantity];
+            // dd($stored_products);
             session()->put('products',$stored_products);
             $total_price_sum = array_sum(array_column($stored_products, 'total_price'));
             session()->put('total_price_sum', $total_price_sum);
             $get_total_price_sum = session()->get('total_price_sum');
-
+            $stock_quantity = session()->get('stock_quantity');
+            // dd($stock_quantity);
         if($products_detail){
             $return_array['status'] = true;
             $return_array['products_detail'] = $products_detail;
             $return_array['total_price_sum'] = $get_total_price_sum;
+            $return_array['stock_quantity'] = $stock_quantity;
         }else{
             $return_array['message'] = 'Product not found';
         }
@@ -158,9 +166,26 @@ class ProductController extends Controller
     public function removeProductFromSession(Request $request){
         $product_id = $request->input('product_id');
         $stored_products = session('products', []); 
+        
+        $product_amount = 0;
 
-        $stored_products = array_filter($stored_products, function ($product) use ($product_id) {
-            return $product['product_id'] != $product_id; 
+            foreach($stored_products as $product){
+                if ($product['product_id'] == $product_id) {
+                    $product_amount = $product['total_price'];
+                    break;
+                }
+            }
+
+            $total_amount = Session::get('total_price', 0);
+            $new_total_amount = max(0, $total_amount - $product_amount);
+            Session::put('total_price', $new_total_amount);
+
+            $stored_products = array_filter($stored_products, function ($product) use ($product_id) {
+                return $product['product_id'] != $product_id;
+
+
+        // $stored_products = array_filter($stored_products, function ($product) use ($product_id) {
+        //     return $product['product_id'] != $product_id; 
         });
 
         session()->put('products', array_values($stored_products)); 
@@ -169,11 +194,34 @@ class ProductController extends Controller
             'success' => true,
         ]);
     }
+    // public function removeProductFromSession(Request $request){
+    //     $product_id = $request->input('product_id');
+    //     $stored_products = session('products', []); 
+        
+       
+
+
+    //     $stored_products = array_filter($stored_products, function ($product) use ($product_id) {
+    //         return $product['product_id'] != $product_id; 
+    //     });
+
+    //     session()->put('products', array_values($stored_products)); 
+
+    //     return response()->json([
+    //         'success' => true,
+    //     ]);
+    // }
 
     public function update_quantity_in_session(Request $request){
 
         $product_id = $request->input('product_id');
         $product_qty = $request->input('product_qty');
+
+        $products = Products::find($product_id);
+        $check_stock = $products->total_quantity;
+        if($check_stock < $product_qty){
+           return response()->json(['status'=>false, 'message'=> "oops stock is only.$check_stock."]); 
+        }
         $new_price = $request->input('product_total_amount');
         $sessionProducts  = session('products',[]);
         foreach($sessionProducts as $key=>$product){
@@ -192,7 +240,11 @@ class ProductController extends Controller
     }
 
     public function products_datatable(Request $request){
-
+        // $currentUrl = url()->current(); 
+        // dd($currentUrl);
+        // dd($_POST);
+        // dd();
+        
         $columns = ['id','product_name','category_id','total_quantity','sold_quantity','price','product_status_id','image_url'];
 
         $limit = $request->input('length');
@@ -236,6 +288,8 @@ class ProductController extends Controller
         $data = [];
         foreach ($products as $product) 
         {
+            // dd($product);
+            // dd($product->product_status_id);
             $nestedData['id'] = $product->id ?? 'Not specified';
             $nestedData['product_name'] = $product->product_name ?? 'Not specified';
             $nestedData['total_quantity'] = $product->total_quantity ?? 'Not specified';
@@ -243,13 +297,29 @@ class ProductController extends Controller
             $nestedData['price'] = $product->price ?? 'Not specified';
             $nestedData['product_status_id'] = $product->status->title ?? 'Not specified';
             $nestedData['category_name'] = $product->category->name ?? 'None';
-        
             $nestedData['image_url'] =  $product->image_url ?'<img src="'.asset('images/categories/'.$product->image_url).'" class="w-50">' : '<img src="'.asset('images/categories/default.png').'" class="w-50">';
+            if(!$request->input('path')){
+                
 
-            $nestedData['action'] = '<button class="btn btn-secondary btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0 me-2" title="Edit" OnClick = "open_edit_product_modal('.$product->id.')">Edit</button>';
+                $nestedData['action'] = '<button class="btn btn-secondary btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0 me-2 edit_btn" title="Edit" OnClick = "open_edit_product_modal('.$product->id.')">Edit</button>';
+                
+                $nestedData['action'] .=  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0 delete_btn" onClick = "delete_product('.$product->id.')" title="Delete product"> Delete
+                </button>';
+            }else{
+
+                if($product->product_status_id == 1){
+                        $nestedData['action'] = '<button 
+                        class="btn btn-sm  btn-primary add_order_btn" 
+                        data-name="' . $product->product_name . '" 
+                        data-id="' . $product->id . '">
+                        <i class="bi bi-plus"></i>
+                    </button>';
+                }else{
+                    $nestedData['action'] = '<a href="javascript:void(0);"> </a>';
+                }
+                
+            }
             
-            $nestedData['action'] .=  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0" onClick = "delete_product('.$product->id.')" title="Delete product"> Delete
-            </button>';
                         
             $data[] = $nestedData;
         }

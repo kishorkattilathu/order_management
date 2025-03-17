@@ -4,6 +4,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -55,7 +56,9 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/dumpsession', [ProductController::class, 'dumpsession'])->name('dumpsession');
     Route::get('/testMail', [OrderController::class, 'testMail'])->name('testMail');
-
+    
+    
+    Route::get('/search', [SearchController::class, 'autocomplete'])->name('search');
 });
 
 require __DIR__.'/auth.php';

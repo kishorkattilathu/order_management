@@ -1,4 +1,5 @@
 $(document).ready(function(){
+
     $('#save_product_btn').html('Save');
 
     console.log('products js');
@@ -35,15 +36,27 @@ $(document).ready(function(){
         
     });
 
-
+    // console.log("Edit button found:", $(".edit_btn").length);
+    // console.log("Delete button found:", $(".delete_btn").length);
 
 });
 
 
+
+
 function products_datatable()
 {
+    var currentUrl = window.location.href;
+    console.log('currentUrl:', currentUrl);
+    console.log("Edit button found:", $(".edit_btn").length);
+    console.log("Delete button found:", $(".delete_btn").length);
+    // Check if the URL contains 'create_orders'
+    if (currentUrl.includes("create_orders")) {
+       var path = currentUrl;
+    }
     var category_id = $('#categories').val();
     var product_status_id = $('#product_status').val();
+    
     console.log(product_status_id);
     if ($.fn.DataTable.isDataTable('#products_datatable')){ 
         $('#products_datatable').DataTable().destroy(); 
@@ -53,7 +66,7 @@ function products_datatable()
         "processing" : true,
         "serverSide" : true,
         "ajax" : {
-            "data": {'product_status_id':product_status_id, 'category_id':category_id},
+            "data": {'product_status_id':product_status_id, 'category_id':category_id,'path':path},
             "url" : base_url + '/products_datatable',
             "type" : "POST",
             "dataType" : "JSON",
