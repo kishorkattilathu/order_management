@@ -28,6 +28,14 @@
                         <input type="number" class="form-control" id="total_quantity" name="total_quantity" required>
                         <span id="error-total_quantity" class="text-danger"></span>
                     </div>
+                    <div class="mb-3">
+                        <label for="is_pre_order" class="form-label">Pre-Orders<span class="required">*</span></label>
+                        <select class="form-control" name="is_pre_order" id="is_pre_order">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                        <span id="error-is_pre_order" class="text-danger"></span>
+                    </div>
                 
                     <div class="mb-3">
                         <label for="price" class="form-label">Price<span class="required">*</span></label>
@@ -37,16 +45,14 @@
                 
                     <div class="mb-3" id="product_status_id_div">
                         <label for="product_status_id" class="form-label">Product Status<span class="required">*</span></label>
+                        
                         <select class="form-control" name="product_status_id" id="product_status_id" required>
-                            <option value="1" selected>Active</option>
-                            <option value="2">Inactive</option>
-                        </select>
-                        {{-- <select class="form-control" name="product_status_id" id="product_status_id" required>
-                            <option value="">Select Status</option>
                             @foreach ($products_statuses as $product_status)
-                                <option value="{{$product_status->id}}">{{$product_status->title}}</option>
+                                <option value="{{$product_status->id}}" @if($product_status->id == 1)selected @endif>
+                                    {{$product_status->title}}
+                                </option>
                             @endforeach
-                        </select> --}}
+                        </select>
                     </div>
                 
                     <div class="mb-3">
@@ -60,16 +66,6 @@
                         <span id="error-category_id" class="text-danger"></span>
 
                     </div>
-                    {{-- <div id="div_old_image">
-                        <img src="" id="old_image" style="width:100px" alt="Old Image">
-                    </div> --}}
-                
-                    {{-- <div class="mb-3">
-                        <label for="image_url" class="form-label">Upload Image</label>
-                        <input type="file" class="form-control" id="image_url" name="image_url" required accept="image/*">
-                        <img id="imagePreview" alt="Image Preview" width="150" style="display: none;">
-                        <span id="error-image_url" class="text-danger"></span>
-                    </div> --}}
 
                     <div class="mb-3">
                         <label for="image_url" class="form-label">Upload Image</label>

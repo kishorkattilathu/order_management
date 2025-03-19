@@ -88,7 +88,8 @@ function update_order_status(){
     $('#update_order_status_btn').text('loading...');
     var order_id = $('#order_no').val();
     var order_status_id = $('#order_status').val();
-
+    var formData = $('#order_form').serialize();
+    console.log(formData);
     $.ajax({
         url: base_url +'/update_order_status',
         data : {'order_id':order_id, 'order_status_id':order_status_id},
@@ -151,7 +152,7 @@ function open_order_modal(order_id) {
         success: function (response) {
             if (response.status) {
                 let orderDetails = response.data;
-
+                console.log('response.data',response.data);
                 if (orderDetails.length > 0) {
                     let firstOrder = orderDetails[0];
 
@@ -164,12 +165,12 @@ function open_order_modal(order_id) {
                     var timeParts = order_time.split(':');
                     var hours = parseInt(timeParts[0],10);
                     var minutes = timeParts[1];
-                    var seconds = timeParts[2];
+                    // var seconds = timeParts[2];
                     var amPm = hours >= 12 ? 'PM' : 'AM';
                     hours = hours % 12 || 12;
                     var usFormatedTime = hours +':'+ minutes + ' ' + amPm;
                     // console.log('hours',hours);
-
+                    // alert(firstOrder.total_amount);
                     $("#order_no").val(firstOrder.id || "");
                     $("#order_type").val( firstOrder.order_type == 1 ? 'Regular' : 'Pre-Order' || "");
                     $("#customer_name").val(firstOrder.customer_name || "");
@@ -183,15 +184,29 @@ function open_order_modal(order_id) {
                     $("#product_fields").empty();
 
                     orderDetails.forEach(function (item) {
+                        console.log('orderDetails',orderDetails);
                         let row = `
                         <tr>
-                            <td><input type="text" class="form-control" value="${item.product_name}" readonly></td>
-                            <td><input type="text" class="form-control" value="${item.product_quantity}" readonly></td>
-                            <td><input type="text" class="form-control" value="${item.product_amount}" readonly></td>
-                            <td><input type="text" class="form-control" value="${(item.product_amount * item.product_quantity)}" readonly></td>
+                            <td>${item.product_name}</td>
+                            <td>${item.product_quantity}</td>
+                            <td>&#8377;${item.product_amount}</td>
+                            <td>&#8377;${(item.product_amount * item.product_quantity)}.00</td>
                         </tr>`;
                         $("#product_fields").append(row);
                     });
+
+                    $("#order_fields").empty();
+                    let row2 = `
+                        <tr>
+                            <td> &#8377;${firstOrder.total_amount}  </td>
+                            <td>  ${usFormatedDate}  </td>
+                            <td>  ${usFormatedTime}  </td>
+                            <td>  ${firstOrder.title}  </td>
+                            <td>  ${firstOrder.payment_status}  </td>
+                            <td>  ${firstOrder.payment_method}  </td>
+                        </tr>
+                        `
+                        $('#order_fields').append(row2);
 
                     $("#order_modal").modal("show");
                 }
@@ -303,7 +318,7 @@ function add_product_list(product_id, product_text){
 
 
 $(document).on('click', '.remove-product', function () {
-
+    console.log("Remove button clicked!");
     var productElement = $(this).closest('.order-item'); 
     // var product_id = productElement.data('product-id');
     var product_id = productElement.find('.product-id').val();
@@ -318,6 +333,7 @@ $(document).on('click', '.remove-product', function () {
             if (response.success) {
                 productElement.remove(); 
                 // location.reload();
+                toastr.error(response.message);
                 productQtyChange(product_id);
 
             } else {
@@ -329,7 +345,6 @@ $(document).on('click', '.remove-product', function () {
                     "progressBar": true
                 };
                 toastr.error(response.message);
-                
             }
         }
     });
@@ -350,6 +365,9 @@ function productQtyChange(product_id){
         headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
         success : function(response){
             if (response.status) {
+               
+                // var product_id = response.product_id;
+                // $(`#product_qty-${product_id}`).val(product_qty);
 
                 var product_data = response.product_data;
                 var total_price_sum = response.total_price_sum;
@@ -365,6 +383,15 @@ function productQtyChange(product_id){
                 // location.reload();
 
             }else{
+                // product_qty-1
+                console.log('response',response);
+                var product_id = response.product_id;
+                var product_qty = response.product_qty;
+                console.log('product_id',product_id);
+                console.log('product_qty',product_qty);
+                $(`#product_qty-${product_id}`).val(product_qty);
+             //   location.reload();
+
                 toastr.options = {
                     "positionClass": "toast-center",
                     "timeOut": "3000",
@@ -456,7 +483,7 @@ function orders_datatable(){
         },
         "columns" : [
             {"data" : "id"},
-            {"data" : "order_type"},
+            // {"data" : "order_type"},
             {"data" : "customer_name"},
             {"data" : "customer_email"},
             {"data" : "total_quantity"},

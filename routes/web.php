@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/delete_product_by_id', [ProductController::class, 'delete_product_by_id'])->name('delete_product_by_id');
     Route::post('/removeProductFromSession', [ProductController::class, 'removeProductFromSession'])->name('removeProductFromSession');
     Route::post('/update_quantity_in_session', [ProductController::class, 'update_quantity_in_session'])->name('update_quantity_in_session');
+    Route::post('/pre_order_checkbox', [ProductController::class, 'pre_order_checkbox'])->name('pre_order_checkbox');
     
     
     

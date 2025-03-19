@@ -37,9 +37,9 @@
                                         <th data-breakpoints="md">Image</th>
                                         <th data-breakpoints="md">Category</th>
                                         <th data-breakpoints="md">Stock</th>
-                                        <th data-breakpoints="md">Sold</th>
+                                        {{-- <th data-breakpoints="md">Sold</th> --}}
                                         <th data-breakpoints="md">Price</th>
-                                        <th data-breakpoints="md">Status</th>
+                                        {{-- <th data-breakpoints="md">Status</th> --}}
                                         <th data-breakpoints="md" style="width:190px;">Action</th>
                                     </tr>
                                 </thead>
@@ -85,10 +85,10 @@
                                             @endforeach
                                         </select> --}}
                                         {{-- <span class="text-danger" id="error-product_ids"></span> --}}
-                                        <div class="form-check">
+                                        {{-- <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="pre_order_checkbox" name="pre_order"{{ session('pre_orders') == 1 ? 'checked' : '' }}>
                                             <label class="form-check-label" for="pre_order_checkbox">Pre Orders</label>
-                                        </div>
+                                        </div> --}}
                                         {{-- <button class="btn btn-primary" id="pre_order_button" type="button">Pre Orders</button> --}}
                                     </div>
                                     {{-- <div class="col-md-4 d-grid">
@@ -131,6 +131,7 @@
                                             <p class="">{{$product['name']}}</p>
                                         </div>
                                         <div class="col-md-2">
+                                            {{-- <p id="product_stock-${product_id}" name="product_stocks[]"  class=" product_stock">{{$product['stock_quantity']}} </p> --}}
                                             <input id="product_stock-${product_id}" type="text" readonly name="product_stocks[]" value="{{$product['stock_quantity']}}" class="form-control product_stock">
                                             {{-- <div id="stock_quantity-{{$product['product_id']}}"> {{$product['stock_quantity']}} </div> --}}
                                         </div>

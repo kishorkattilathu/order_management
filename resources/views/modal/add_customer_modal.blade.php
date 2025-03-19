@@ -14,7 +14,7 @@
 
                     <!-- First Name -->
                     <div class="mb-3">
-                        <label for="first_name" class="form-label">First Name</label>
+                        <label for="first_name" class="form-label">First Name<span class="required">*</span></label>
                         <input type="text" class="form-control" id="first_name" name="first_name" required>
                         <span id="error-first_name" class="text-danger"></span>
                     </div>
@@ -29,7 +29,7 @@
 
                     <!-- Last Name -->
                     <div class="mb-3">
-                        <label for="last_name" class="form-label">Last Name</label>
+                        <label for="last_name" class="form-label">Last Name<span class="required">*</span></label>
                         <input type="text" class="form-control" id="last_name" name="last_name" required>
                         <span id="error-last_name" class="text-danger"></span>
 
@@ -37,7 +37,7 @@
 
                     <!-- Email -->
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
+                        <label for="email" class="form-label">Email<span class="required">*</span></label>
                         <input type="email" class="form-control" id="email" name="email" required>
                         <span id="error-email" class="text-danger"></span>
 
@@ -45,7 +45,7 @@
 
                     <!-- Phone -->
                     <div class="mb-3">
-                        <label for="phone" class="form-label">Phone</label>
+                        <label for="phone" class="form-label">Phone<span class="required">*</span></label>
                         <input type="tel" class="form-control" id="phone" name="phone" required>
                         <span id="error-phone" class="text-danger"></span>
 
@@ -53,7 +53,7 @@
 
                     <!-- Address -->
                     <div class="mb-3">
-                        <label for="address" class="form-label">Address</label>
+                        <label for="address" class="form-label">Address<span class="required">*</span></label>
                         <textarea class="form-control" id="address" name="address" rows="2" required></textarea>
                         <span id="error-address" class="text-danger"></span>
 
@@ -61,7 +61,7 @@
 
                     <!-- Date of Birth -->
                     <div class="mb-3">
-                        <label for="dob" class="form-label">Date of Birth</label>
+                        <label for="dob" class="form-label">Date of Birth<span class="required">*</span></label>
                         <input type="date" class="form-control" id="dob" name="dob" required>
                         <span id="error-dob" class="text-danger"></span>
 
@@ -69,7 +69,7 @@
 
                     <!-- Gender -->
                     <div class="mb-3">
-                        <label class="form-label">Gender</label>
+                        <label class="form-label">Gender<span class="required">*</span></label>
                         <div class="d-flex">
                             <div class="form-check me-3">
                                 <input class="form-check-input" type="radio" name="gender" id="male" value="male" required>

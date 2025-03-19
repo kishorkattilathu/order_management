@@ -1,18 +1,20 @@
 $(document).ready(function(){
+    console.log('products js');
+    $('#save_product_btn').html('Save');
+    
     $('#pre_order_checkbox').on('change', function(){ 
-        products_datatable();
+
+        // products_datatable();
+        pre_order_checkbox();
         $('.order-item').remove();
         $('#grand_total').text('₹ 00.00');
     });
-    $('#save_product_btn').html('Save');
 
-    console.log('products js');
     products_datatable();
 
     $('#open_add_product_modal').on('click',function(){
         open_add_product_modal();
     });
-   
    
     $('#save_product_btn').on('click',function(){
         save_product();
@@ -25,21 +27,7 @@ $(document).ready(function(){
         products_datatable();
     });
 
-    
-
-    // $('#image_url').change(function (event) {
-    //     let file = event.target.files[0];
-    //     if (file) {
-    //         let reader = new FileReader();
-    //         reader.onload = function (e) {
-    //             $('#imagePreview').attr('src', e.target.result).show(); 
-    //         };
-    //         reader.readAsDataURL(file);
-    //     }else{
-    //         resetPreview();
-    //     }
-        
-    // });
+   
     document.getElementById('image_url').addEventListener('change', function(event) {
         var file = event.target.files[0]; 
         if (file) {
@@ -58,6 +46,32 @@ $(document).ready(function(){
 
 });
 
+function pre_order_checkbox(){
+
+    if($('#pre_order_checkbox').is(':checked')) {
+            var pre_order_check = 1;
+            // alert('checked');
+    }else{
+    var pre_order_check = 0;
+    //    alert('not checked');
+    }
+    $.ajax({
+        data : {'pre_order_check':pre_order_check},
+        type : 'POST',
+        datatype : 'JSON',
+        url : base_url + '/pre_order_checkbox',
+        headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+        success: function(response){
+            if (response.status) {
+                products_datatable();
+            }else{
+                products_datatable();
+
+            }
+        },
+    });
+}
+
 
 
 
@@ -75,7 +89,6 @@ function products_datatable()
     // console.log('currentUrl:', currentUrl);
     // console.log("Edit button found:", $(".edit_btn").length);
     // console.log("Delete button found:", $(".delete_btn").length);
-    // Check if the URL contains 'create_orders'
     if (currentUrl.includes("create_orders")) {
        var path = currentUrl;
     }
@@ -87,6 +100,28 @@ function products_datatable()
         $('#products_datatable').DataTable().destroy(); 
     }
 
+    var columns = [
+        {"data" : "id"},
+        {"data" : "product_name"},
+        {"data" : "image_url"},
+        {"data" : "category_name"},
+        {"data" : "total_quantity"},
+    ];
+    if (!path) { 
+        columns.push({"data": "sold_quantity"});
+    }
+    
+    columns = columns.concat([
+        {"data": "price"},
+        
+    ]);
+    if (!path) { 
+        columns.push({"data": "product_status_id"});
+    }
+    columns = columns.concat([
+        {"data": "action"}
+    ]);
+
     $('#products_datatable').DataTable({
         "processing" : true,
         "serverSide" : true,
@@ -97,17 +132,18 @@ function products_datatable()
             "dataType" : "JSON",
             "headers" : {'X-CSRF-TOKEN': $('meta[name = "csrf-token"]').attr('content')},
         },
-        "columns" : [
-            {"data" : "id"},
-            {"data" : "product_name"},
-            {"data" : "image_url"},
-            {"data" : "category_name"},
-            {"data" : "total_quantity"},
-            {"data" : "sold_quantity"},
-            {"data" : "price"},
-            {"data" : "product_status_id"},
-            {"data" : "action"},
-        ]
+        "columns" : columns
+        // [
+        //     {"data" : "id"},
+        //     {"data" : "product_name"},
+        //     {"data" : "image_url"},
+        //     {"data" : "category_name"},
+        //     {"data" : "total_quantity"},
+        //     // {"data" : "sold_quantity"},
+        //     {"data" : "price"},
+        //     // {"data" : "product_status_id"},
+        //     {"data" : "action"},
+        // ]
     });
 }
 
@@ -163,6 +199,7 @@ function save_product(){
 function display_php_error(response_message){
     $.each(response_message,function(input_id,response_message){
         $('#error-'+input_id ).html(response_message);
+        $(input_id ).focus();
     });
 }
 
@@ -222,23 +259,16 @@ function open_edit_product_modal(product_id){
                 if (response.status) {
                     var product = response.products_detail;
                     console.log('product.image_url',product.image_url);
-                    // $('#div_old_image').show();
                     
                     $('#product_name').val(product.product_name);
                     $('#description').val(product.description);
                     $('#total_quantity').val(product.total_quantity);
+                    $('#is_pre_order').val(product.is_pre_order);
                     $('#price').val(product.price);
-                    console.log(response.option_html);
 
-                    $('#product_status_id').html(response.option_html);
                     $('#product_status_id').val(product.product_status_id).trigger('change');
                     $('#category_id').val(product.category_id).trigger('change');
-                    // $('#old_image').attr('src',product.image_url ? 'images/categories/'+product.image_url:'images/categories/default.png');
-                    // if (product.image_url) {
-                    //     $('#imagePreview').attr('src', 'images/categories/' + product.image_url).show();
-                    // } else {
-                    //     $('#imagePreview').hide();
-                    // }
+                   
 
                     if (product.image_url) {
                         $('#imagePreview').attr('src', 'images/categories/' + product.image_url).show();

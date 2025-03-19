@@ -24,8 +24,9 @@
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
+                                   
                                     <th>Product Name</th>
-                                    <th>Quantity</th>
+                                    <th>Qty</th>
                                     <th>Price Per Qty.</th>
                                     <th>Sub total</th>
                                 </tr>
@@ -34,7 +35,7 @@
                         </table>
                     </div>
 
-                    <div class="row">
+                    {{-- <div class="row">
                         <div class="col-md-3 mb-3">
                             <label for="total" class="form-label">Grand Total</label>
                             <input type="text" class="form-control" id="total" name="total" readonly>
@@ -56,9 +57,29 @@
                             </select>
                         </div>
                         
+                    </div> --}}
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Grand Total</th>
+                                    <th>Order Date</th>
+                                    <th>Order Time</th>
+                                    <th>Order Status</th>
+                                    <th>Payment Status</th>
+                                    <th>Payment Type</th>
+                                    {{-- <th>Action</th> --}}
+                                </tr>
+                            </thead>
+                            <tbody id="order_fields">
+
+                            </tbody>
+                        </table>
+
                     </div>
 
-                    <div class="row">
+                    {{-- <div class="row">
                         <div class="col-md-4 mb-3">
                             <label for="payment_status" class="form-label">Payment Status</label>
                             <input type="text" class="form-control" id="payment_status" name="payment_status" readonly>
@@ -71,15 +92,15 @@
                             <label for="order_type" class="form-label">Order Type</label>
                             <input type="text" class="form-control" id="order_type" name="order_type" readonly>
                         </div>
-                    </div>
+                    </div> --}}
                 </form>
             </div>
 
-            <div class="modal-footer">
+            {{-- <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" id="update_order_status_btn" class="btn btn-primary">Update</button>
 
-            </div>
+            </div> --}}
         </div>
     </div>
 </div>
