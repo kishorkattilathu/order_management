@@ -148,13 +148,7 @@ class CustomerController extends Controller
             $nestedData['action'] .=  '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0" onClick = "delete_customer('.$customer->id.')" title="Delete Customer"> Delete
             </button>';
 
-            // $nestedData['action'] .= '<button class="btn btn-danger btn-icon btn-circle btn-sm hov-svg-white mt-2 mt-sm-0 delete-btn" 
-            // data-bs-toggle="modal" 
-            // data-bs-target="#deleteModal"
-            // data-id="'.$customer->id.'" 
-            // title="Delete Customer"> 
-            // Delete
-            // </button>';
+            
                         
             $data[] = $nestedData;
         }
@@ -240,10 +234,7 @@ class CustomerController extends Controller
 
         $customer_id = $request->input('customer_id');
         if ($customer_id) {
-            // $delete_user = Customers::where('id',$customer_id)->first();
-            // $inactive = 'inactive';
-            //  $delete_user->account_status =$inactive;
-            //  $deleted = $delete_user->save();
+           
             $customer = Customers::find($customer_id);
             $deleted = $customer->delete();
             if($deleted){

@@ -12,7 +12,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/get_all_orders', [OrderController::class, 'get_all_orders']);
+// Route::get('/get_all_orders', [OrderController::class, 'get_all_orders']);
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -45,7 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/pre_order_checkbox', [ProductController::class, 'pre_order_checkbox'])->name('pre_order_checkbox');
     
     
-    
+    //OrderController
     Route::get('/create_orders', [OrderController::class, 'create_orders'])->name('create_orders');
     Route::post('/create_final_order', [OrderController::class, 'create_final_order'])->name('create_final_order');
     Route::get('/all_orders', [OrderController::class, 'all_orders'])->name('all_orders');

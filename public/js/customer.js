@@ -230,10 +230,8 @@ function delete_customer(customerId) {
                         "progressBar": true
                     };
                     toastr.success(response.message);
-                    // alert('Customer deleted successfully!');
                     customer_table();
                 } else {
-                    // alert(response.message || 'Failed to delete customer.');
                     toastr.options = {
                         "positionClass": "toast-center",
                         "timeOut": "3000",
@@ -253,38 +251,7 @@ function delete_customer(customerId) {
     }
 }
 
-// function get_customers_by_status(){
-//     var customers_status = $('#customers_selection_by_status').val();
-//     // console.log(customers_selection_by_status);
 
-//     if ($.fn.DataTable.isDataTable('#all_customers_table')){ 
-        
-//         $('#all_customers_table').DataTable().destroy(); 
-//     }
-//     $('#all_customers_table').DataTable({
-//         "processing" : true,
-//         "serverSide" : true,
-//         "ajax" : {
-//             "data" : {'customers_status':customers_status},
-//             "url" : base_url + '/get_all_customers',
-//             "type" : "POST",
-//             "dataType" : "JSON",
-//             "headers" : {'X-CSRF-TOKEN': $('meta[name = "csrf-token"]').attr('content')},
-//         },
-//         "columns" : [
-//             {"data" : "id"},
-//             {"data" : "first_name"},
-//             {"data" : "email"},
-//             {"data" : "phone"},
-//             // {"data" : "address"},
-//             {"data" : "date_of_birth"},
-//             {"data" : "gender"},
-//             {"data" : "account_status"},
-//             {"data" : "action"},
-//         ]
-//     });
-
-// }
 
         
 

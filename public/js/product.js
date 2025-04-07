@@ -223,7 +223,6 @@ function open_add_product_modal(){
     $('#description').val('');
     $('#total_quantity').val('');
     $('#price').val('');
-    // $('#product_status_id').val('');
     
     
     $('#category_id').val('');

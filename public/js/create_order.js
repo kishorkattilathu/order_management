@@ -21,9 +21,7 @@ $(document).ready(function(){
         
     });
     
-    // $('#pre_order_checkbox').on('click',function(){
-    //     pre_orders();
-    // });
+  
 
 });
 
@@ -141,7 +139,6 @@ function update_order_status(){
 }
 
 function open_order_modal(order_id) {
-    // console.log("Fetching order:", order_id);
 
     $.ajax({
         url: base_url + "/get_order_detail_by_id",
@@ -169,8 +166,6 @@ function open_order_modal(order_id) {
                     var amPm = hours >= 12 ? 'PM' : 'AM';
                     hours = hours % 12 || 12;
                     var usFormatedTime = hours +':'+ minutes + ' ' + amPm;
-                    // console.log('hours',hours);
-                    // alert(firstOrder.total_amount);
                     $("#order_no").val(firstOrder.id || "");
                     $("#order_type").val( firstOrder.order_type == 1 ? 'Regular' : 'Pre-Order' || "");
                     $("#customer_name").val(firstOrder.customer_name || "");
@@ -240,9 +235,6 @@ function add_product_list(product_id, product_text){
         return;
     }
 
-    // var product_id = $('#product_id').val();
-    // var product_text = $('#product_id option:selected').text();
-
     $.ajax({
         url: base_url +'/get_product_detail',
         data : {'product_id':product_id},
@@ -251,7 +243,6 @@ function add_product_list(product_id, product_text){
         headers : {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
         success : function(response){
             if (response.status) {
-                // console.log('stored_products',response.stored_products);
                 var total_price_sum = response.total_price_sum;
                 var product_detail = response.products_detail;
                 var stock_quantity = response.stock_quantity;
@@ -259,7 +250,7 @@ function add_product_list(product_id, product_text){
                 var newRow = `
                     <div class="row g-3 align-items-end order-item">
                         <div class="col-md-3">
-                            <input type="hidden" name="product_ids[]" value="${product_id}">
+                            <input type="hidden" name="products[][product_id]" class="product-id" value="${product_id}">
                             <input id="product_price-${product_id}" type="hidden" name="product_price[]" value="${product_detail.price}">
                             <p class="">${product_text}</p>
                         </div>
@@ -267,12 +258,12 @@ function add_product_list(product_id, product_text){
                         <input id="product_stock-${product_id}" type="text" readonly name="product_stocks[]" value="${stock_quantity !== null ? stock_quantity : product_detail.total_quantity}" class="form-control product_stock">
                            
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <input  type="number" onChange="productQtyChange(${product_id})" name="product_qty[]" data-product_id="${product_id}" id="product_qty-${product_id}" value="1" min="1" class="form-control product_qty">
 
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <div id="product_amount-${product_id}">${product_detail.price} </div>
 
                         </div>
@@ -300,7 +291,6 @@ function add_product_list(product_id, product_text){
                 toastr.error(response.message);
                 $('#search').val('');
 
-                // alert(response.message);
             }
         },
         error : function(xhr,status,error){
@@ -320,9 +310,9 @@ function add_product_list(product_id, product_text){
 $(document).on('click', '.remove-product', function () {
     console.log("Remove button clicked!");
     var productElement = $(this).closest('.order-item'); 
-    // var product_id = productElement.data('product-id');
     var product_id = productElement.find('.product-id').val();
-    // console.log(product_id,'product_id');
+    console.log(product_id,'product_id');
+
 
     $.ajax({
         url : base_url +'/removeProductFromSession',
@@ -332,7 +322,6 @@ $(document).on('click', '.remove-product', function () {
         success: function (response) {
             if (response.success) {
                 productElement.remove(); 
-                // location.reload();
                 toastr.error(response.message);
                 productQtyChange(product_id);
 
@@ -366,12 +355,8 @@ function productQtyChange(product_id){
         success : function(response){
             if (response.status) {
                
-                // var product_id = response.product_id;
-                // $(`#product_qty-${product_id}`).val(product_qty);
-
                 var product_data = response.product_data;
                 var total_price_sum = response.total_price_sum;
-                // $('#grand_total').html('&#8377;' + total_price_sum );
                 $('#grand_total').html('&#8377; ' + parseFloat(total_price_sum).toFixed(2));
 
 
@@ -380,17 +365,14 @@ function productQtyChange(product_id){
                     console.log(item)
                     $('#product_amount-'+item.product_id).text(item.total_price);
                 });
-                // location.reload();
 
             }else{
-                // product_qty-1
                 console.log('response',response);
                 var product_id = response.product_id;
                 var product_qty = response.product_qty;
                 console.log('product_id',product_id);
                 console.log('product_qty',product_qty);
                 $(`#product_qty-${product_id}`).val(product_qty);
-             //   location.reload();
 
                 toastr.options = {
                     "positionClass": "toast-center",
@@ -537,14 +519,7 @@ function cancel_order(order_id){
                     var response_error = xhr.responseJSON.errors;
                     display_php_error(response_error);
                     alert(response_error);
-                    // toastr.options = {
-                    //     "positionClass": "toast-center", // Custom class for center alignment
-                    //     "timeOut": "3000", // Auto close after 3 seconds
-                    //     "extendedTimeOut": "1000",
-                    //     "closeButton": true,
-                    //     "progressBar": true
-                    // };
-                    // toastr.error(xhr.responseJSON.errors);
+                    
             }
         });
     }
@@ -564,10 +539,7 @@ function remove_php_error(input_array){
 }
 
 $(document).ready(function() {
-    // $('#search').on('focus',function(){
-    //     let resultHtml = '<div class="result-item add-new form-control p-2" style="max-height: 200px; overflow-y: auto;">Add new +</div>';
-    //     $('#result').html(resultHtml);
-    // });
+   
     $('#search').on('keyup', function() {
         var query = $(this).val();
         if (query.length > 0) {
@@ -600,14 +572,3 @@ $(document).ready(function() {
     });
 });
 
-// $(document).ready(function () {
-//     var currentUrl = window.location.href;
-//     console.log('currentUrl:', currentUrl);
-//     console.log("Edit button found:", $(".edit_btn").length);
-//     console.log("Delete button found:", $(".delete_btn").length);
-//     // Check if the URL contains 'create_orders'
-//     if (currentUrl.includes("create_orders")) {
-//         $(".edit_btn").hide(); 
-//         $(".delete_btn").hide(); 
-//     }
-// });
